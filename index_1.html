@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aegis — Runtime capability enforcement for AI agents</title>
+<meta name="description" content="Aegis is a deterministic capability-enforcement layer for AI agents on MCP. No LLM in the enforcement path. Every tool call evaluated against a spec, with a forensic audit trail.">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #EDEFEA;
+    --paper-raised: #F5F6F2;
+    --ink: #15191C;
+    --ink-soft: #454C50;
+    --ink-faint: #767F81;
+    --rule: #C7CCC4;
+    --allow: #2F6B4F;
+    --deny: #A83B2A;
+    --panel: #15191C;
+    --panel-text: #EDEFEA;
+    --panel-text-soft: #9CA6A2;
+    --max: 1080px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Archivo', system-ui, sans-serif;
+    font-size: 17px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: inherit; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+  .wrap {
+    max-width: var(--max);
+    margin: 0 auto;
+    padding: 0 28px;
+  }
+
+  code, .mono {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  }
+
+  /* ---------- Header ---------- */
+  header {
+    padding: 28px 0 24px;
+    border-bottom: 1px solid var(--rule);
+  }
+  header .wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .wordmark {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    font-size: 17px;
+    letter-spacing: -0.01em;
+  }
+  .wordmark span { color: var(--ink-faint); font-weight: 400; }
+  nav { display: flex; gap: 28px; font-size: 15px; }
+  nav a { text-decoration: none; color: var(--ink-soft); border-bottom: 1px solid transparent; padding-bottom: 2px; }
+  nav a:hover { color: var(--ink); border-bottom-color: var(--ink); }
+
+  /* ---------- Hero ---------- */
+  .hero { padding: 72px 0 88px; }
+  .hero .grid {
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    gap: 56px;
+    align-items: start;
+  }
+  h1 {
+    font-size: clamp(30px, 4.4vw, 44px);
+    line-height: 1.15;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    margin: 0 0 22px;
+  }
+  .lede {
+    font-size: 18px;
+    color: var(--ink-soft);
+    max-width: 46ch;
+    margin: 0 0 30px;
+  }
+  .cta-row { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 26px; }
+  .btn {
+    display: inline-block;
+    padding: 12px 20px;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid var(--ink);
+    border-radius: 3px;
+  }
+  .btn-solid { background: var(--ink); color: var(--paper); }
+  .btn-solid:hover { background: #262D31; }
+  .btn-line { background: transparent; color: var(--ink); }
+  .btn-line:hover { background: var(--paper-raised); }
+  .status-line {
+    font-size: 13.5px;
+    color: var(--ink-faint);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .status-line .dot {
+    display: inline-block;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--allow);
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+
+  /* ---------- Terminal panel ---------- */
+  .panel {
+    background: var(--panel);
+    color: var(--panel-text);
+    border-radius: 6px;
+    padding: 22px 22px 24px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.75;
+    overflow-x: auto;
+  }
+  .panel .cmd {
+    color: var(--panel-text-soft);
+    margin-bottom: 14px;
+    font-size: 12px;
+  }
+  .panel .rule-line { color: var(--panel-text-soft); }
+  .panel .allow { color: #63C795; font-weight: 600; }
+  .panel .deny { color: #E37E68; font-weight: 600; }
+  .panel .meta { color: var(--panel-text-soft); padding-left: 22px; display: block; }
+  .panel hr {
+    border: none;
+    border-top: 1px solid #2B3236;
+    margin: 12px 0;
+  }
+  .panel .result { color: var(--panel-text-soft); font-style: normal; }
+
+  /* ---------- Sections ---------- */
+  section { padding: 64px 0; border-top: 1px solid var(--rule); }
+  h2 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0 0 34px;
+  }
+
+  /* Pipeline */
+  .pipeline {
+    display: flex;
+    align-items: stretch;
+    flex-wrap: wrap;
+    gap: 0;
+    margin-bottom: 30px;
+  }
+  .pipeline .step {
+    flex: 1 1 160px;
+    padding: 16px 18px;
+    border: 1px solid var(--rule);
+  }
+  .pipeline .step + .step { border-left: none; }
+  @media (max-width: 720px) {
+    .pipeline .step { border-left: 1px solid var(--rule); }
+    .pipeline .step + .step { border-top: none; }
+  }
+  .pipeline .step .n {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-faint);
+    margin-bottom: 8px;
+  }
+  .pipeline .step .t {
+    font-weight: 600;
+    font-size: 15px;
+    margin-bottom: 6px;
+  }
+  .pipeline .step .d {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    line-height: 1.45;
+  }
+  .commitment {
+    font-size: 17px;
+    max-width: 68ch;
+    border-left: 3px solid var(--ink);
+    padding-left: 20px;
+    margin: 0;
+  }
+  .commitment strong { font-weight: 700; }
+
+  /* Capability list */
+  .cap-list { border-top: 1px solid var(--rule); }
+  .cap-row {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 24px;
+    padding: 18px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .cap-row .name {
+    font-weight: 600;
+    font-size: 15px;
+  }
+  .cap-row .desc {
+    font-size: 15px;
+    color: var(--ink-soft);
+  }
+  @media (max-width: 620px) {
+    .cap-row { grid-template-columns: 1fr; gap: 6px; }
+  }
+
+  /* Stack position */
+  .stack-diagram {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    background: var(--paper-raised);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 20px 24px;
+    margin: 26px 0;
+    line-height: 1.9;
+  }
+  .stack-diagram .who { color: var(--ink); font-weight: 600; }
+
+  p.body-copy { font-size: 16px; color: var(--ink-soft); max-width: 62ch; }
+
+  /* Status */
+  .status-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-top: 30px;
+  }
+  @media (max-width: 720px) {
+    .status-grid { grid-template-columns: 1fr; }
+  }
+  .status-card {
+    border: 1px solid var(--rule);
+    padding: 20px;
+    border-radius: 4px;
+  }
+  .status-card .k {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-faint);
+    margin-bottom: 8px;
+  }
+  .status-card .v { font-size: 15px; line-height: 1.5; }
+
+  /* Footer */
+  footer {
+    padding: 44px 0 56px;
+    border-top: 1px solid var(--rule);
+  }
+  footer .wrap {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    font-size: 14px;
+    color: var(--ink-faint);
+  }
+  footer a { text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 3px; }
+  footer a:hover { text-decoration-color: var(--ink); }
+
+  @media (max-width: 860px) {
+    .hero .grid { grid-template-columns: 1fr; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="wordmark">aegis<span>.runtime</span></div>
+    <nav>
+      <a href="https://github.com/obengbuo/aegis" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/obengbuo/aegis/blob/v0.1.1/docs/WAXELL_INTEGRATION.md" target="_blank" rel="noopener">Quick start</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="wrap grid">
+    <div>
+      <h1>Identity proves who an agent is. Aegis decides what it's allowed to do.</h1>
+      <p class="lede">A deterministic capability-enforcement layer for AI agents on the Model Context Protocol. Every tool call is evaluated against a spec before it reaches the server — no LLM anywhere in the enforcement path.</p>
+      <div class="cta-row">
+        <a class="btn btn-solid" href="https://github.com/obengbuo/aegis" target="_blank" rel="noopener">View on GitHub</a>
+        <a class="btn btn-line" href="https://github.com/obengbuo/aegis/blob/v0.1.1/docs/WAXELL_INTEGRATION.md" target="_blank" rel="noopener">Quick start guide</a>
+      </div>
+      <div class="status-line"><span class="dot"></span>v0.1.1 — pip-installable, 95 tests, in active testing with a design partner</div>
+    </div>
+
+    <div class="panel">
+      <div class="cmd">$ pytest tests/test_enforcement.py -v -s</div>
+      <div>AEGIS ENFORCEMENT REPORT — capability spec vs. prompt injection</div>
+      <hr>
+      <div><span class="allow">[ALLOW]</span> read_text_file&nbsp;&nbsp;&nbsp;meeting-notes.txt</div>
+      <div><span class="deny">[DENY]</span>&nbsp;&nbsp;read_text_file&nbsp;&nbsp;&nbsp;project-update.txt</div>
+      <span class="meta rule-line">rule=rule-7-value-not-allowed</span>
+      <span class="meta rule-line">spec_hash=enforcement-test-v1</span>
+      <hr>
+      <div class="result">Agent run terminated by enforcement: value<br>'project-update.txt' not in capability spec</div>
+    </div>
+  </div>
+</div>
+
+<section>
+  <div class="wrap">
+    <h2>How a tool call gets evaluated</h2>
+    <div class="pipeline">
+      <div class="step">
+        <div class="n">1</div>
+        <div class="t">Request</div>
+        <div class="d">A user or operator describes the task in plain language.</div>
+      </div>
+      <div class="step">
+        <div class="n">2</div>
+        <div class="t">Proposer</div>
+        <div class="d">An LLM reads the request once, upfront, and drafts a minimum-capability spec. It never sees tool output.</div>
+      </div>
+      <div class="step">
+        <div class="n">3</div>
+        <div class="t">Spec</div>
+        <div class="d">The spec is validated and frozen. From here, nothing widens it.</div>
+      </div>
+      <div class="step">
+        <div class="n">4</div>
+        <div class="t">Enforcement</div>
+        <div class="d">Every tool call is checked against the spec by pure, deterministic code.</div>
+      </div>
+      <div class="step">
+        <div class="n">5</div>
+        <div class="t">Tool</div>
+        <div class="d">Allowed calls reach the MCP server. Denied calls never do.</div>
+      </div>
+    </div>
+    <p class="commitment"><strong>The enforcement path contains no LLM.</strong> The proposer runs once, on trusted input, before execution starts. After that, every decision is computed in microseconds and is provable by reading the code.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>What it does today</h2>
+    <div class="cap-list">
+      <div class="cap-row">
+        <div class="name">Deterministic enforcement</div>
+        <div class="desc">Every MCP tool call is evaluated against a capability spec before it reaches the server. Literal matching only — no globs, no regex, no inferred scope.</div>
+      </div>
+      <div class="cap-row">
+        <div class="name">LLM-generated specs</div>
+        <div class="desc">A natural-language request becomes a minimum-capability YAML spec, generated once and validated before use.</div>
+      </div>
+      <div class="cap-row">
+        <div class="name">Human approval on sensitive calls</div>
+        <div class="desc">Operator-defined intercept rules pause a call for sign-off before it proceeds, through a callback you control.</div>
+      </div>
+      <div class="cap-row">
+        <div class="name">Response inspection</div>
+        <div class="desc">Deterministic scanning for leaked secrets — SSNs, credit cards, private keys, cloud credentials — before a response reaches the agent.</div>
+      </div>
+      <div class="cap-row">
+        <div class="name">Forensic audit trail</div>
+        <div class="desc">Every decision is logged with the exact policy version and prompt version that produced it.</div>
+      </div>
+      <div class="cap-row">
+        <div class="name">OTLP export</div>
+        <div class="desc">Audit events flow into your existing observability stack — Datadog, Jaeger, or anything OTLP-compatible.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Where it sits</h2>
+    <p class="body-copy">Identity vendors answer one question: is this agent allowed in. Aegis answers a different one: what is it allowed to do once it's in. These are separate layers, and Aegis doesn't compete with the first one — it picks up where it leaves off.</p>
+    <div class="stack-diagram">
+      <div><span class="who">Your identity provider</span> — authenticates the agent</div>
+      <div style="padding-left: 20px;">↓</div>
+      <div><span class="who">Aegis</span> — decides what the authenticated agent may do, per task</div>
+      <div style="padding-left: 20px;">↓</div>
+      <div>MCP server — only sees the calls Aegis allowed through</div>
+    </div>
+    <p class="body-copy">It works with any identity system, any observability stack, and drops into an existing Pydantic AI agent with one line of code.</p>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="wrap">
+    <h2>Current status</h2>
+    <div class="status-grid">
+      <div class="status-card">
+        <div class="k">STAGE</div>
+        <div class="v">Pre-production. v0.1.1 shipped, public, pip-installable. One design partner in active testing.</div>
+      </div>
+      <div class="status-card">
+        <div class="k">BUILT FOR</div>
+        <div class="v">Platform and security engineers running agents with real tool-calling access — especially where "prove what the agent did" is a live requirement.</div>
+      </div>
+      <div class="status-card">
+        <div class="k">TALK TO ME</div>
+        <div class="v">Building agents with real tool access? I'd like to hear what your team is running into. <a href="mailto:hello@aegisruntime.dev">hello@aegisruntime.dev</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>Aegis — MIT licensed.</div>
+    <div>
+      <a href="https://github.com/obengbuo/aegis" target="_blank" rel="noopener">GitHub</a>
+      &nbsp;·&nbsp;
+      <a href="https://www.linkedin.com/in/obeng-buo-72ab8296/" target="_blank" rel="noopener">LinkedIn</a>
+      &nbsp;·&nbsp;
+      <a href="mailto:hello@aegisruntime.dev">hello@aegisruntime.dev</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
