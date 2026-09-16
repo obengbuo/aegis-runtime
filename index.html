@@ -152,6 +152,13 @@
   .part h3 { font-size: 17px; font-weight: 700; margin: 0 0 10px; }
   .part p { font-size: 15px; color: var(--ink-soft); margin: 0 0 10px; }
   .part .opt { font-size: 13.5px; color: var(--ink-faint); font-style: normal; }
+  .part-links { margin-top: 14px; font-size: 14px; display: flex; gap: 18px; flex-wrap: wrap; }
+  .part-links a {
+    text-decoration: none; color: var(--ink); font-weight: 600;
+    border-bottom: 1px solid var(--rule); padding-bottom: 1px;
+  }
+  .part-links a:hover { border-bottom-color: var(--ink); }
+  .part-links a::after { content: " \2192"; color: var(--ink-faint); font-weight: 400; }
 
   /* Status */
   .status-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 30px; }
@@ -256,12 +263,20 @@
         <h3>The library</h3>
         <p>A Python package that wraps any Pydantic AI toolset in one line. Evaluates every tool call against a capability spec, intercepts sensitive ones for human approval, scans responses for leaked secrets, and writes a local audit log.</p>
         <p class="opt"><code>pip install</code> and nothing else. Works standalone.</p>
+        <div class="part-links">
+          <a href="https://github.com/obengbuo/aegis" target="_blank" rel="noopener">Repo</a>
+          <a href="https://github.com/obengbuo/aegis/blob/v0.2.0/docs/INTEGRATION.md" target="_blank" rel="noopener">Integration guide</a>
+        </div>
       </div>
       <div class="part">
         <div class="k">OPTIONAL</div>
         <h3>The control plane</h3>
         <p>A self-hosted backend that aggregates audit records across agents and makes them queryable. Reconstruct any run, find every refused call, prove which policy version made each decision.</p>
         <p class="opt">Self-hosted, <code>docker compose up</code>. Never in the enforcement path — if it's unreachable, tool calls are still evaluated and decisions are still correct.</p>
+        <div class="part-links">
+          <a href="https://github.com/obengbuo/aegis-controlplane" target="_blank" rel="noopener">Repo</a>
+          <a href="https://github.com/obengbuo/aegis/blob/v0.2.0/docs/CONTROL_PLANE.md" target="_blank" rel="noopener">Setup guide</a>
+        </div>
       </div>
     </div>
   </div>
@@ -348,7 +363,7 @@
       &nbsp;·&nbsp;
       <a href="https://www.linkedin.com/in/obeng-buo-72ab8296/" target="_blank" rel="noopener">LinkedIn</a>
       &nbsp;·&nbsp;
-      <a href="mailto:hello@aegisruntime.dev">obengbuo@aegisruntime.dev</a>
+      <a href="mailto:hello@aegisruntime.dev">hello@aegisruntime.dev</a>
     </div>
   </div>
 </footer>
