@@ -26,7 +26,6 @@
   }
 
   * { box-sizing: border-box; }
-
   html { scroll-behavior: smooth; }
 
   body {
@@ -42,250 +41,135 @@
   a { color: inherit; }
   a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
 
-  .wrap {
-    max-width: var(--max);
-    margin: 0 auto;
-    padding: 0 28px;
-  }
+  .wrap { max-width: var(--max); margin: 0 auto; padding: 0 28px; }
 
-  code, .mono {
-    font-family: 'IBM Plex Mono', ui-monospace, monospace;
-  }
+  code, .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
 
-  /* ---------- Header ---------- */
-  header {
-    padding: 28px 0 24px;
-    border-bottom: 1px solid var(--rule);
-  }
+  /* Header */
+  header { padding: 28px 0 24px; border-bottom: 1px solid var(--rule); }
   header .wrap {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 16px;
   }
   .wordmark {
     font-family: 'IBM Plex Mono', monospace;
-    font-weight: 600;
-    font-size: 17px;
-    letter-spacing: -0.01em;
+    font-weight: 600; font-size: 17px; letter-spacing: -0.01em;
   }
   .wordmark span { color: var(--ink-faint); font-weight: 400; }
   nav { display: flex; gap: 28px; font-size: 15px; }
   nav a { text-decoration: none; color: var(--ink-soft); border-bottom: 1px solid transparent; padding-bottom: 2px; }
   nav a:hover { color: var(--ink); border-bottom-color: var(--ink); }
 
-  /* ---------- Hero ---------- */
-  .hero { padding: 72px 0 88px; }
+  /* Hero */
+  .hero { padding: 72px 0 80px; }
   .hero .grid {
-    display: grid;
-    grid-template-columns: 1.05fr 1fr;
-    gap: 56px;
-    align-items: start;
+    display: grid; grid-template-columns: 1.05fr 1fr;
+    gap: 56px; align-items: start;
   }
   h1 {
     font-size: clamp(30px, 4.4vw, 44px);
-    line-height: 1.15;
-    font-weight: 700;
-    letter-spacing: -0.015em;
-    margin: 0 0 22px;
+    line-height: 1.15; font-weight: 700;
+    letter-spacing: -0.015em; margin: 0 0 22px;
   }
-  .lede {
-    font-size: 18px;
-    color: var(--ink-soft);
-    max-width: 46ch;
-    margin: 0 0 30px;
-  }
+  .lede { font-size: 18px; color: var(--ink-soft); max-width: 46ch; margin: 0 0 30px; }
   .cta-row { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 26px; }
   .btn {
-    display: inline-block;
-    padding: 12px 20px;
-    font-size: 15px;
-    font-weight: 600;
-    text-decoration: none;
-    border: 1px solid var(--ink);
-    border-radius: 3px;
+    display: inline-block; padding: 12px 20px; font-size: 15px;
+    font-weight: 600; text-decoration: none;
+    border: 1px solid var(--ink); border-radius: 3px;
   }
   .btn-solid { background: var(--ink); color: var(--paper); }
   .btn-solid:hover { background: #262D31; }
   .btn-line { background: transparent; color: var(--ink); }
   .btn-line:hover { background: var(--paper-raised); }
-  .status-line {
-    font-size: 13.5px;
-    color: var(--ink-faint);
-    font-family: 'IBM Plex Mono', monospace;
-  }
+  .status-line { font-size: 13.5px; color: var(--ink-faint); font-family: 'IBM Plex Mono', monospace; }
   .status-line .dot {
-    display: inline-block;
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: var(--allow);
-    margin-right: 8px;
-    vertical-align: middle;
+    display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--allow); margin-right: 8px; vertical-align: middle;
   }
 
-  /* ---------- Terminal panel ---------- */
+  /* Terminal panel */
   .panel {
-    background: var(--panel);
-    color: var(--panel-text);
-    border-radius: 6px;
-    padding: 22px 22px 24px;
+    background: var(--panel); color: var(--panel-text);
+    border-radius: 6px; padding: 22px 22px 24px;
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 12.5px;
-    line-height: 1.75;
-    overflow-x: auto;
+    font-size: 12.5px; line-height: 1.75; overflow-x: auto;
   }
-  .panel .cmd {
-    color: var(--panel-text-soft);
-    margin-bottom: 14px;
-    font-size: 12px;
-  }
+  .panel .cmd { color: var(--panel-text-soft); margin-bottom: 14px; font-size: 12px; }
   .panel .rule-line { color: var(--panel-text-soft); }
   .panel .allow { color: #63C795; font-weight: 600; }
   .panel .deny { color: #E37E68; font-weight: 600; }
   .panel .meta { color: var(--panel-text-soft); padding-left: 22px; display: block; }
-  .panel hr {
-    border: none;
-    border-top: 1px solid #2B3236;
-    margin: 12px 0;
-  }
-  .panel .result { color: var(--panel-text-soft); font-style: normal; }
+  .panel hr { border: none; border-top: 1px solid #2B3236; margin: 12px 0; }
+  .panel .result { color: var(--panel-text-soft); }
 
-  /* ---------- Sections ---------- */
+  /* Sections */
   section { padding: 64px 0; border-top: 1px solid var(--rule); }
-  h2 {
-    font-size: 22px;
-    font-weight: 700;
-    letter-spacing: -0.01em;
-    margin: 0 0 34px;
-  }
+  h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 34px; }
 
   /* Pipeline */
-  .pipeline {
-    display: flex;
-    align-items: stretch;
-    flex-wrap: wrap;
-    gap: 0;
-    margin-bottom: 30px;
-  }
-  .pipeline .step {
-    flex: 1 1 160px;
-    padding: 16px 18px;
-    border: 1px solid var(--rule);
-  }
+  .pipeline { display: flex; align-items: stretch; flex-wrap: wrap; gap: 0; margin-bottom: 30px; }
+  .pipeline .step { flex: 1 1 160px; padding: 16px 18px; border: 1px solid var(--rule); }
   .pipeline .step + .step { border-left: none; }
   @media (max-width: 720px) {
     .pipeline .step { border-left: 1px solid var(--rule); }
     .pipeline .step + .step { border-top: none; }
   }
-  .pipeline .step .n {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 12px;
-    color: var(--ink-faint);
-    margin-bottom: 8px;
-  }
-  .pipeline .step .t {
-    font-weight: 600;
-    font-size: 15px;
-    margin-bottom: 6px;
-  }
-  .pipeline .step .d {
-    font-size: 13.5px;
-    color: var(--ink-soft);
-    line-height: 1.45;
-  }
+  .pipeline .step .n { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--ink-faint); margin-bottom: 8px; }
+  .pipeline .step .t { font-weight: 600; font-size: 15px; margin-bottom: 6px; }
+  .pipeline .step .d { font-size: 13.5px; color: var(--ink-soft); line-height: 1.45; }
   .commitment {
-    font-size: 17px;
-    max-width: 68ch;
-    border-left: 3px solid var(--ink);
-    padding-left: 20px;
-    margin: 0;
+    font-size: 17px; max-width: 68ch;
+    border-left: 3px solid var(--ink); padding-left: 20px; margin: 0;
   }
   .commitment strong { font-weight: 700; }
 
   /* Capability list */
   .cap-list { border-top: 1px solid var(--rule); }
   .cap-row {
-    display: grid;
-    grid-template-columns: 240px 1fr;
-    gap: 24px;
-    padding: 18px 0;
-    border-bottom: 1px solid var(--rule);
+    display: grid; grid-template-columns: 240px 1fr; gap: 24px;
+    padding: 18px 0; border-bottom: 1px solid var(--rule);
   }
-  .cap-row .name {
-    font-weight: 600;
-    font-size: 15px;
-  }
-  .cap-row .desc {
-    font-size: 15px;
-    color: var(--ink-soft);
-  }
-  @media (max-width: 620px) {
-    .cap-row { grid-template-columns: 1fr; gap: 6px; }
-  }
+  .cap-row .name { font-weight: 600; font-size: 15px; }
+  .cap-row .desc { font-size: 15px; color: var(--ink-soft); }
+  @media (max-width: 620px) { .cap-row { grid-template-columns: 1fr; gap: 6px; } }
 
-  /* Stack position */
   .stack-diagram {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 13.5px;
-    color: var(--ink-soft);
-    background: var(--paper-raised);
-    border: 1px solid var(--rule);
-    border-radius: 4px;
-    padding: 20px 24px;
-    margin: 26px 0;
-    line-height: 1.9;
+    font-family: 'IBM Plex Mono', monospace; font-size: 13.5px;
+    color: var(--ink-soft); background: var(--paper-raised);
+    border: 1px solid var(--rule); border-radius: 4px;
+    padding: 20px 24px; margin: 26px 0; line-height: 1.9;
   }
   .stack-diagram .who { color: var(--ink); font-weight: 600; }
 
   p.body-copy { font-size: 16px; color: var(--ink-soft); max-width: 62ch; }
 
+  /* Two-part layout */
+  .parts { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 8px; }
+  @media (max-width: 720px) { .parts { grid-template-columns: 1fr; } }
+  .part { border: 1px solid var(--rule); border-radius: 4px; padding: 22px 24px; background: var(--paper-raised); }
+  .part .k { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--ink-faint); margin-bottom: 10px; }
+  .part h3 { font-size: 17px; font-weight: 700; margin: 0 0 10px; }
+  .part p { font-size: 15px; color: var(--ink-soft); margin: 0 0 10px; }
+  .part .opt { font-size: 13.5px; color: var(--ink-faint); font-style: normal; }
+
   /* Status */
-  .status-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-    margin-top: 30px;
-  }
-  @media (max-width: 720px) {
-    .status-grid { grid-template-columns: 1fr; }
-  }
-  .status-card {
-    border: 1px solid var(--rule);
-    padding: 20px;
-    border-radius: 4px;
-  }
-  .status-card .k {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 12px;
-    color: var(--ink-faint);
-    margin-bottom: 8px;
-  }
+  .status-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 30px; }
+  @media (max-width: 720px) { .status-grid { grid-template-columns: 1fr; } }
+  .status-card { border: 1px solid var(--rule); padding: 20px; border-radius: 4px; }
+  .status-card .k { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--ink-faint); margin-bottom: 8px; }
   .status-card .v { font-size: 15px; line-height: 1.5; }
 
-  /* Footer */
-  footer {
-    padding: 44px 0 56px;
-    border-top: 1px solid var(--rule);
-  }
+  footer { padding: 44px 0 56px; border-top: 1px solid var(--rule); }
   footer .wrap {
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 16px;
-    font-size: 14px;
-    color: var(--ink-faint);
+    display: flex; justify-content: space-between; flex-wrap: wrap;
+    gap: 16px; font-size: 14px; color: var(--ink-faint);
   }
   footer a { text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 3px; }
   footer a:hover { text-decoration-color: var(--ink); }
 
-  @media (max-width: 860px) {
-    .hero .grid { grid-template-columns: 1fr; }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    html { scroll-behavior: auto; }
-  }
+  @media (max-width: 860px) { .hero .grid { grid-template-columns: 1fr; } }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 </style>
 </head>
 <body>
@@ -295,7 +179,7 @@
     <div class="wordmark">aegis<span>.runtime</span></div>
     <nav>
       <a href="https://github.com/obengbuo/aegis" target="_blank" rel="noopener">GitHub</a>
-      <a href="https://github.com/obengbuo/aegis/blob/v0.1.1/docs/WAXELL_INTEGRATION.md" target="_blank" rel="noopener">Quick start</a>
+      <a href="https://github.com/obengbuo/aegis/blob/v0.2.0/docs/INTEGRATION.md" target="_blank" rel="noopener">Quick start</a>
       <a href="#contact">Contact</a>
     </nav>
   </div>
@@ -305,24 +189,26 @@
   <div class="wrap grid">
     <div>
       <h1>Identity proves who an agent is. Aegis decides what it's allowed to do.</h1>
-      <p class="lede">A deterministic capability-enforcement layer for AI agents on the Model Context Protocol. Every tool call is evaluated against a spec before it reaches the server — no LLM anywhere in the enforcement path.</p>
+      <p class="lede">A deterministic capability-enforcement layer for AI agents on the Model Context Protocol. Every tool call is evaluated against a spec before it reaches the server, with no LLM anywhere in the enforcement path.</p>
       <div class="cta-row">
         <a class="btn btn-solid" href="https://github.com/obengbuo/aegis" target="_blank" rel="noopener">View on GitHub</a>
-        <a class="btn btn-line" href="https://github.com/obengbuo/aegis/blob/v0.1.1/docs/WAXELL_INTEGRATION.md" target="_blank" rel="noopener">Quick start guide</a>
+        <a class="btn btn-line" href="https://github.com/obengbuo/aegis/blob/v0.2.0/docs/INTEGRATION.md" target="_blank" rel="noopener">Quick start guide</a>
       </div>
-      <div class="status-line"><span class="dot"></span>v0.1.1 — pip-installable, 95 tests, in active testing with a design partner</div>
+      <div class="status-line"><span class="dot"></span>v0.2.0 — pip-installable, 218 tests, public</div>
     </div>
 
     <div class="panel">
-      <div class="cmd">$ pytest tests/test_enforcement.py -v -s</div>
-      <div>AEGIS ENFORCEMENT REPORT — capability spec vs. prompt injection</div>
+      <div class="cmd">$ python -m tools.demo_end_to_end</div>
+      <div>TOOL-CALL SEQUENCE — one agent run</div>
       <hr>
-      <div><span class="allow">[ALLOW]</span> read_text_file&nbsp;&nbsp;&nbsp;meeting-notes.txt</div>
-      <div><span class="deny">[DENY]</span>&nbsp;&nbsp;read_text_file&nbsp;&nbsp;&nbsp;project-update.txt</div>
-      <span class="meta rule-line">rule=rule-7-value-not-allowed</span>
-      <span class="meta rule-line">spec_hash=enforcement-test-v1</span>
+      <div><span class="rule-line">1</span> SPEC_LOADED&nbsp;&nbsp;<span class="rule-line">opens run</span></div>
+      <div><span class="rule-line">2</span> <span class="allow">OK</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;read_text_file&nbsp;&nbsp;action-items.txt</div>
+      <div><span class="rule-line">3</span> <span class="allow">OK</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;read_text_file&nbsp;&nbsp;agenda.txt</div>
+      <div><span class="rule-line">4</span> <span class="allow">OK</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;read_text_file&nbsp;&nbsp;meeting-notes.txt</div>
+      <div><span class="rule-line">5</span> <span class="deny">DENIED</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;read_text_file&nbsp;&nbsp;project-update.txt</div>
+      <span class="meta rule-line">rule-7-value-not-allowed</span>
       <hr>
-      <div class="result">Agent run terminated by enforcement: value<br>'project-update.txt' not in capability spec</div>
+      <div class="result">The injected instruction asked for a fourth file.<br>The MCP server never saw the request.</div>
     </div>
   </div>
 </div>
@@ -363,6 +249,26 @@
 
 <section>
   <div class="wrap">
+    <h2>Two pieces</h2>
+    <div class="parts">
+      <div class="part">
+        <div class="k">REQUIRED</div>
+        <h3>The library</h3>
+        <p>A Python package that wraps any Pydantic AI toolset in one line. Evaluates every tool call against a capability spec, intercepts sensitive ones for human approval, scans responses for leaked secrets, and writes a local audit log.</p>
+        <p class="opt"><code>pip install</code> and nothing else. Works standalone.</p>
+      </div>
+      <div class="part">
+        <div class="k">OPTIONAL</div>
+        <h3>The control plane</h3>
+        <p>A self-hosted backend that aggregates audit records across agents and makes them queryable. Reconstruct any run, find every refused call, prove which policy version made each decision.</p>
+        <p class="opt">Self-hosted, <code>docker compose up</code>. Never in the enforcement path — if it's unreachable, tool calls are still evaluated and decisions are still correct.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
     <h2>What it does today</h2>
     <div class="cap-list">
       <div class="cap-row">
@@ -383,7 +289,11 @@
       </div>
       <div class="cap-row">
         <div class="name">Forensic audit trail</div>
-        <div class="desc">Every decision is logged with the exact policy version and prompt version that produced it.</div>
+        <div class="desc">Every decision is logged with the exact policy version and prompt version that produced it. Waivers and denials are greppable by rule.</div>
+      </div>
+      <div class="cap-row">
+        <div class="name">Central audit aggregation</div>
+        <div class="desc">The optional control plane collects records across agents into Postgres, with a query API and a read-only web view for reconstructing any run.</div>
       </div>
       <div class="cap-row">
         <div class="name">OTLP export</div>
@@ -396,7 +306,7 @@
 <section>
   <div class="wrap">
     <h2>Where it sits</h2>
-    <p class="body-copy">Identity vendors answer one question: is this agent allowed in. Aegis answers a different one: what is it allowed to do once it's in. These are separate layers, and Aegis doesn't compete with the first one — it picks up where it leaves off.</p>
+    <p class="body-copy">Identity vendors answer one question: is this agent allowed in. Aegis answers a different one: what is it allowed to do once it's in. These are separate layers, and Aegis doesn't compete with the first one. It picks up where that one leaves off.</p>
     <div class="stack-diagram">
       <div><span class="who">Your identity provider</span> — authenticates the agent</div>
       <div style="padding-left: 20px;">↓</div>
@@ -414,11 +324,11 @@
     <div class="status-grid">
       <div class="status-card">
         <div class="k">STAGE</div>
-        <div class="v">Pre-production. v0.1.1 shipped, public, pip-installable. One design partner in active testing.</div>
+        <div class="v">Pre-production. v0.2.0 shipped, public, pip-installable. 218 tests in the library, 317 in the control plane.</div>
       </div>
       <div class="status-card">
         <div class="k">BUILT FOR</div>
-        <div class="v">Platform and security engineers running agents with real tool-calling access — especially where "prove what the agent did" is a live requirement.</div>
+        <div class="v">Platform and security engineers running agents with real tool-calling access — especially where "prove what the agent did" is a requirement rather than a nice-to-have.</div>
       </div>
       <div class="status-card">
         <div class="k">TALK TO ME</div>
@@ -432,11 +342,13 @@
   <div class="wrap">
     <div>Aegis — MIT licensed.</div>
     <div>
-      <a href="https://github.com/obengbuo/aegis" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/obengbuo/aegis" target="_blank" rel="noopener">Library</a>
+      &nbsp;·&nbsp;
+      <a href="https://github.com/obengbuo/aegis-controlplane" target="_blank" rel="noopener">Control plane</a>
       &nbsp;·&nbsp;
       <a href="https://www.linkedin.com/in/obeng-buo-72ab8296/" target="_blank" rel="noopener">LinkedIn</a>
       &nbsp;·&nbsp;
-      <a href="mailto:hello@aegisruntime.dev">hello@aegisruntime.dev</a>
+      <a href="mailto:hello@aegisruntime.dev">obengbuo@aegisruntime.dev</a>
     </div>
   </div>
 </footer>
