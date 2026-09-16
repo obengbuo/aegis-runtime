@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your agent's permissions are tighter than your policy thinks — Aegis</title>
+<meta name="description" content="Literal argument matching eliminates path traversal for single values. It says nothing about lists. Two capability-scoping bypasses in an MCP enforcement layer, how batched tool calls silently remove argument scoping, and the fix.">
+<link rel="canonical" href="https://aegisruntime.dev/writing/capability-scoping-bypass.html">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Your agent's permissions are tighter than your policy thinks">
+<meta property="og:description" content="Literal argument matching eliminates path traversal for single values. It says nothing about lists. Two capability-scoping bypasses in an MCP enforcement layer, and the fix.">
+<meta property="og:url" content="https://aegisruntime.dev/writing/capability-scoping-bypass.html">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #EDEFEA;
+    --paper-raised: #F5F6F2;
+    --ink: #15191C;
+    --ink-soft: #454C50;
+    --ink-faint: #767F81;
+    --rule: #C7CCC4;
+    --allow: #2F6B4F;
+    --deny: #A83B2A;
+    --panel: #15191C;
+    --panel-text: #EDEFEA;
+    --panel-text-soft: #9CA6A2;
+    --max: 1080px;
+    --measure: 70ch;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Archivo', system-ui, sans-serif;
+    font-size: 17px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: inherit; }
+  a:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+  .wrap { max-width: var(--max); margin: 0 auto; padding: 0 28px; }
+
+  code, .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+
+  /* Header — identical to index.html */
+  header { padding: 28px 0 24px; border-bottom: 1px solid var(--rule); }
+  header .wrap {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 16px;
+  }
+  .wordmark {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600; font-size: 17px; letter-spacing: -0.01em;
+    text-decoration: none;
+  }
+  .wordmark span { color: var(--ink-faint); font-weight: 400; }
+  nav { display: flex; gap: 28px; font-size: 15px; flex-wrap: wrap; }
+  nav a { text-decoration: none; color: var(--ink-soft); border-bottom: 1px solid transparent; padding-bottom: 2px; }
+  nav a:hover { color: var(--ink); border-bottom-color: var(--ink); }
+  nav a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--rule); }
+
+  /* Article shell */
+  .article-wrap { max-width: var(--max); margin: 0 auto; padding: 0 28px; }
+
+  .backlink {
+    display: inline-block; margin: 30px 0 0;
+    font-family: 'IBM Plex Mono', monospace; font-size: 13.5px;
+    color: var(--ink-faint); text-decoration: none;
+    border-bottom: 1px solid transparent; padding-bottom: 2px;
+  }
+  .backlink:hover { color: var(--ink); border-bottom-color: var(--ink); }
+
+  /* Article head — vertical padding only, so .article-wrap keeps the side gutter */
+  .article-head { padding-top: 26px; padding-bottom: 40px; border-bottom: 1px solid var(--rule); }
+  h1 {
+    font-size: clamp(28px, 4.2vw, 41px);
+    line-height: 1.16; font-weight: 700;
+    letter-spacing: -0.015em; margin: 0 0 20px;
+    max-width: 22ch;
+  }
+  .dek {
+    font-size: 18.5px; color: var(--ink-soft);
+    line-height: 1.5; margin: 0 0 26px; max-width: 54ch;
+  }
+  .byline {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px; color: var(--ink-faint);
+    display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+  }
+  .byline .sep { color: var(--rule); }
+
+  /* Long-form body */
+  article { padding: 44px 0 20px; }
+  article p {
+    font-size: 17.5px; line-height: 1.72;
+    color: var(--ink-soft); margin: 0 0 1.35em;
+    max-width: var(--measure);
+  }
+  article p strong { color: var(--ink); font-weight: 600; }
+  article h2 {
+    font-size: 24px; font-weight: 700; letter-spacing: -0.012em;
+    color: var(--ink); line-height: 1.25;
+    margin: 2.6em 0 0.85em; max-width: 26ch;
+    padding-top: 0.6em; border-top: 1px solid var(--rule);
+  }
+  article h2:first-of-type { margin-top: 0; padding-top: 0; border-top: none; }
+  article > *:first-child { margin-top: 0; }
+
+  article ul {
+    margin: 0 0 1.35em; padding-left: 0; list-style: none;
+    max-width: var(--measure);
+  }
+  article ul li {
+    font-size: 17.5px; line-height: 1.72; color: var(--ink-soft);
+    padding-left: 26px; margin-bottom: 0.6em; position: relative;
+  }
+  article ul li::before {
+    content: "—"; position: absolute; left: 0;
+    color: var(--ink-faint); font-family: 'IBM Plex Mono', monospace;
+    font-size: 15px;
+  }
+  article ul li strong { color: var(--ink); font-weight: 600; }
+
+  /* Inline code */
+  article p code, article li code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.88em; background: var(--paper-raised);
+    border: 1px solid var(--rule); border-radius: 3px;
+    padding: 1px 5px; color: var(--ink);
+  }
+
+  /* Dark code panel — same style as the homepage hero */
+  .panel {
+    background: var(--panel); color: var(--panel-text);
+    border-radius: 6px; padding: 22px 22px 24px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12.5px; line-height: 1.75; overflow-x: auto;
+    margin: 0 0 1.9em; max-width: var(--measure);
+    -webkit-overflow-scrolling: touch;
+  }
+  .panel pre {
+    margin: 0; font: inherit; color: inherit;
+    white-space: pre; tab-size: 2;
+  }
+  .panel .c { color: var(--panel-text-soft); }
+  .panel .allow { color: #63C795; font-weight: 600; }
+  .panel .deny { color: #E37E68; font-weight: 600; }
+  .panel .key { color: #9CC6E0; }
+  .panel .str { color: #C9D6A8; }
+
+  /* Pull quote */
+  .pull {
+    font-size: 17.5px; line-height: 1.6; color: var(--ink);
+    border-left: 3px solid var(--ink); padding-left: 20px;
+    margin: 0 0 1.9em; max-width: var(--measure);
+  }
+  .pull strong { font-weight: 700; }
+
+  /* Article footer */
+  .article-foot {
+    margin-top: 56px; padding-top: 30px;
+    border-top: 1px solid var(--rule); max-width: var(--measure);
+  }
+  .article-foot p { font-size: 16px; color: var(--ink-soft); }
+  .article-foot a {
+    color: var(--ink); font-weight: 600; text-decoration: none;
+    border-bottom: 1px solid var(--rule); padding-bottom: 1px;
+  }
+  .article-foot a:hover { border-bottom-color: var(--ink); }
+
+  footer { margin-top: 64px; padding: 44px 0 56px; border-top: 1px solid var(--rule); }
+  footer .wrap {
+    display: flex; justify-content: space-between; flex-wrap: wrap;
+    gap: 16px; font-size: 14px; color: var(--ink-faint);
+  }
+  footer a { text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 3px; }
+  footer a:hover { text-decoration-color: var(--ink); }
+
+  @media (max-width: 620px) {
+    body { font-size: 16px; }
+    .wrap, .article-wrap { padding: 0 20px; }
+    nav { gap: 18px; font-size: 14px; }
+    article p, article ul li { font-size: 17px; line-height: 1.68; }
+    article h2 { font-size: 21px; margin-top: 2.2em; max-width: none; }
+    h1 { max-width: none; }
+    .dek { font-size: 17px; }
+    .panel { font-size: 11.5px; padding: 18px 16px 20px; border-radius: 5px; }
+    footer .wrap { flex-direction: column; gap: 10px; }
+  }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <a class="wordmark" href="/">aegis<span>.runtime</span></a>
+    <nav>
+      <a href="https://github.com/obengbuo/aegis" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/obengbuo/aegis/blob/v0.2.0/docs/INTEGRATION.md" target="_blank" rel="noopener">Quick start</a>
+      <a href="/#writing" aria-current="page">Writing</a>
+      <a href="/#contact">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<div class="article-wrap">
+  <a class="backlink" href="/">&larr; aegis.runtime</a>
+</div>
+
+<div class="article-wrap article-head">
+  <h1>Your agent's permissions are tighter than your policy thinks</h1>
+  <p class="dek">Literal argument matching eliminates path traversal for single values. It says nothing at all about lists — and that gap doesn't announce itself.</p>
+  <div class="byline">
+    <span>Obeng Buo</span>
+    <span class="sep">&middot;</span>
+    <time datetime="2026-09-16">16 September 2026</time>
+    <span class="sep">&middot;</span>
+    <span>Aegis</span>
+  </div>
+</div>
+
+<div class="article-wrap">
+<article>
+
+<p>I've been building a capability-enforcement layer for AI agents that call tools over MCP. The model is simple: before an agent runs, generate a policy listing the exact tools it may call and the exact argument values it may call them with. Evaluate every call against that policy. Deny anything not listed.</p>
+
+<p>Literal matching only. No globs, no regex, no path normalisation. That was a deliberate choice, and the reasoning was that literal matching eliminates the pattern-bypass class entirely rather than trying to sanitise it. You cannot traverse out of <code>/sandbox/notes.txt</code> if the only permitted value is the string <code>/sandbox/notes.txt</code>.</p>
+
+<p>I wrote that claim in the design document. It was wrong, and it took me three months to find out why.</p>
+
+<h2>The setup</h2>
+
+<p>A user asks an agent to read three files and summarise them. The policy generated for that task looks like this:</p>
+
+<div class="panel"><pre><span class="key">servers</span>:
+  <span class="key">filesystem</span>:
+    <span class="key">tools</span>:
+      <span class="key">read_text_file</span>:
+        <span class="key">args</span>:
+          <span class="key">path</span>:
+            <span class="key">must_match_one_of</span>:
+              - <span class="str">/sandbox/meeting-notes.txt</span>
+              - <span class="str">/sandbox/agenda.txt</span>
+              - <span class="str">/sandbox/action-items.txt</span></pre></div>
+
+<p>Three exact paths. Nothing else permitted. A call for any fourth file is refused.</p>
+
+<p>This works. I have a test that runs a real model against a real filesystem MCP server, with a prompt injection planted in one of the three files instructing the agent to read a fourth. The agent follows the injection. The call is refused before the MCP server sees it.</p>
+
+<p>Then I changed one thing about the task, and everything broke.</p>
+
+<h2>What actually happens when an agent reads three files</h2>
+
+<p>It doesn't make three calls.</p>
+
+<p>The reference filesystem MCP server exposes <code>read_multiple_files</code>, which takes a list. Asked to read three files, the model batched them:</p>
+
+<div class="panel"><pre>read_multiple_files(paths=[<span class="str">"/sandbox/meeting-notes.txt"</span>,
+                           <span class="str">"/sandbox/agenda.txt"</span>,
+                           <span class="str">"/sandbox/action-items.txt"</span>])</pre></div>
+
+<p>The policy has no entry for <code>read_multiple_files</code>, so the call was refused. Correctly — deny by default worked. But for the wrong reason, and the refusal landed on exactly the calls the user had asked for.</p>
+
+<p>So I did what any operator would do. I added the tool.</p>
+
+<p>And that is where it falls apart, because the constraint cannot be expressed. A list of paths cannot be matched against a list of permitted literal values the way a single path can. <code>must_match_one_of</code> compares a value against permitted values. The value here is <code>["/a", "/b", "/c"]</code>. There is no sensible literal to put on the other side.</p>
+
+<p>The path of least resistance is to leave it unconstrained:</p>
+
+<div class="panel"><pre>      <span class="key">read_multiple_files</span>:
+        <span class="key">args</span>:
+          <span class="key">paths</span>:          <span class="c"># no constraint — a list can't be matched literally</span></pre></div>
+
+<p>Which produces this:</p>
+
+<div class="panel"><pre><span class="c">policy:</span> read_multiple_files, paths unconstrained
+<span class="c">call:  </span> read_multiple_files(paths=[<span class="str">"/etc/shadow"</span>])
+<span class="c">result:</span> <span class="allow">ALLOW</span></pre></div>
+
+<p>Path scoping for that tool is now entirely gone.</p>
+
+<h2>Why this is worse than a normal bug</h2>
+
+<p>The policy still looks tight. Three exact paths sit right above it. Anyone reviewing that file sees a carefully scoped policy with one entry that looks unremarkable.</p>
+
+<p>Nothing in the policy file says path scoping is absent for that tool. Nothing in the decision says it. Nothing in the audit record says it. The call is recorded as an ordinary allow, indistinguishable from a call that was genuinely checked against a permitted value.</p>
+
+<p>And the mechanism generalises past this one tool:</p>
+
+<ul>
+  <li>An agent batches several operations into one call to reduce round trips.</li>
+  <li>The batched form takes a collection where the single form took a scalar.</li>
+  <li>The authorization layer can constrain the scalar and cannot constrain the collection.</li>
+  <li>Leaving it unconstrained is the only option that lets the agent work at all.</li>
+</ul>
+
+<p>Any MCP server offering both a singular and a plural form of an operation creates this. Read, write, delete, fetch. The plural form gets added for efficiency, usually by someone who is not thinking about authorization, and it becomes a bypass nobody wrote down.</p>
+
+<h2>The second one, which is worse</h2>
+
+<p>While fixing that I found a related failure with a nastier shape.</p>
+
+<p>The policy engine stringified argument values before comparison. That is a reasonable implementation choice when you need to compare heterogeneous types — integers, floats, strings, paths — against permitted values written as strings.</p>
+
+<p>It also means this:</p>
+
+<div class="panel"><pre><span class="c">policy:</span> paths must_match_one_of [<span class="str">"['/sandbox/a.txt', '/sandbox/b.txt']"</span>]
+<span class="c">call:  </span> paths = <span class="str">"['/sandbox/a.txt', '/sandbox/b.txt']"</span>    <span class="c">&larr; a string</span>
+<span class="c">result:</span> <span class="allow">ALLOW</span></pre></div>
+
+<p>The constraint was written with a list in mind. It is satisfied by a string that happens to render identically. <code>str(value)</code> on both sides makes a list and its string representation indistinguishable.</p>
+
+<p>An attacker who controls a string-valued argument can satisfy a constraint the policy author wrote for a collection. More generally: an engine that cannot distinguish the type of what it is evaluating cannot make sound claims about what it permits.</p>
+
+<h2>The fix</h2>
+
+<p>Three changes, all in the direction of denying what the engine cannot reason about precisely.</p>
+
+<ul>
+  <li><strong>Collections are matched element-wise.</strong> Every element must appear in the permitted values. Order does not matter, so <code>["/a", "/b"]</code> and <code>["/b", "/a"]</code> are equivalent. A list containing one unlisted element is denied.</li>
+  <li><strong>Empty collections are denied.</strong> Not because an empty list is dangerous in itself, but because some servers interpret an empty list as "all" and reasoning about which ones do is not worth the correctness risk. An empty list is a no-op for the agent and a question mark for the engine, so it gets refused.</li>
+  <li><strong>Types are compared before values.</strong> Anything the engine cannot reason about precisely — a dict, a nested list, bytes, an arbitrary object — is denied whether constrained or not. Denying what you cannot evaluate is cheaper than being wrong about it.</li>
+</ul>
+
+<p>There is an explicit escape hatch, because sometimes an operator genuinely needs an unconstrained argument and forcing them to fake a constraint is worse than letting them say so:</p>
+
+<div class="panel"><pre>      <span class="key">read_multiple_files</span>:
+        <span class="key">args</span>:
+          <span class="key">paths</span>:
+            <span class="key">allow_any</span>: <span class="str">true</span></pre></div>
+
+<p>That is not a free pass. It is off by default, it has to be written deliberately, and the resulting decision carries a distinct rule identifier in the audit record. A waiver shows up in a query for waivers. It does not hide inside the ordinary allows.</p>
+
+<p class="pull">That last property is the one I care about most. The original bug was not that an unconstrained argument permitted everything — an operator might legitimately want that. The bug was that it permitted everything <strong>silently</strong>, in a policy that looked tight, with no trace in the record.</p>
+
+<h2>Why literal matching still isn't wrong</h2>
+
+<p>The Week 3 reasoning was sound about what it was reasoning about. Globs and regex genuinely do introduce the pattern-bypass class, and literal matching genuinely does eliminate it.</p>
+
+<p>What the reasoning missed is that literal matching eliminates bypass surface for scalars, and the policy format permitted non-scalars without saying what happened to them. The claim was not too strong for the values it covered. It was silently applied to values it had never considered.</p>
+
+<p>That distinction seems like the useful thing to take away. Not "literal matching is insufficient" but "a constraint mechanism should refuse the inputs it cannot constrain, rather than passing them through."</p>
+
+<h2>On the taxonomy</h2>
+
+<p>Both findings are filed with the OWASP MCP Top 10 project (issue #62).</p>
+
+<p>The interesting part is where they don't fit. MCP02 covers Privilege Escalation via Scope Creep, and its text says permissions "are expanded over time — intentionally for convenience or accidentally through configuration drift."</p>
+
+<p>Neither of these involves drift. Both were wrong at the moment the policy was written, in a system whose author believed it was correct. Nothing changes after deployment. The recommended mitigations — automated scope expiry, periodic access reviews — don't catch either, because the scope was never correct to begin with and a reviewer looking at that policy sees three tight paths and one unremarkable entry.</p>
+
+<p>Also worth noting: neither is addressed by the OAuth 2.1 and resource-indicator guidance that dominates MCP authorization discussion right now. That guidance establishes <em>which tools</em> an agent may call. Both failures occur one layer down, in <em>what arguments</em> those tools may be called with, and that layer is where file paths, database targets, and API endpoints are actually bounded.</p>
+
+<h2>How I found them</h2>
+
+<p>Not by attacking the system. By writing a document claiming what it did and then checking every claim against the code.</p>
+
+<p>That has now caught four things across three passes: a runnable example in the integration guide that didn't run, an injection scenario documented as firing a rule it never fired, a correlation-ID claim that was false, and these two bypasses. Each was written by someone — me — who believed it at the time.</p>
+
+<p>The habit generalises past documentation. Write down what you think your system guarantees, in specific terms, then go and check each sentence against the code rather than against your memory of the code. The gap between the two is where the interesting bugs live.</p>
+
+<div class="article-foot">
+  <p>The implementation is open source (MIT): <a href="https://github.com/obengbuo/aegis" target="_blank" rel="noopener">github.com/obengbuo/aegis</a>. Both fixes have regression tests.</p>
+  <p>If you're running agents with real tool access and want to compare notes on how you're bounding them, I'd genuinely like to hear it — particularly if you've hit either of these and solved it differently. <a href="mailto:obengbuo@aegisruntime.dev">obengbuo@aegisruntime.dev</a></p>
+</div>
+
+</article>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div>Aegis — MIT licensed.</div>
+    <div>
+      <a href="https://github.com/obengbuo/aegis" target="_blank" rel="noopener">Library</a>
+      &nbsp;·&nbsp;
+      <a href="https://github.com/obengbuo/aegis-controlplane" target="_blank" rel="noopener">Control plane</a>
+      &nbsp;·&nbsp;
+      <a href="https://www.linkedin.com/in/obeng-buo-72ab8296/" target="_blank" rel="noopener">LinkedIn</a>
+      &nbsp;·&nbsp;
+      <a href="mailto:obengbuo@aegisruntime.dev">obengbuo@aegisruntime.dev</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

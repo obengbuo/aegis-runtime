@@ -160,6 +160,25 @@
   .part-links a:hover { border-bottom-color: var(--ink); }
   .part-links a::after { content: " \2192"; color: var(--ink-faint); font-weight: 400; }
 
+  /* Writing */
+  .writing-list { border-top: 1px solid var(--rule); }
+  .writing-item {
+    display: block; text-decoration: none;
+    padding: 22px 0; border-bottom: 1px solid var(--rule);
+  }
+  .writing-item .date {
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px;
+    color: var(--ink-faint); margin-bottom: 8px;
+  }
+  .writing-item .t {
+    font-size: 18px; font-weight: 700; letter-spacing: -0.01em;
+    color: var(--ink); margin-bottom: 8px; max-width: 34ch;
+  }
+  .writing-item .d { font-size: 15px; color: var(--ink-soft); max-width: 58ch; line-height: 1.5; }
+  .writing-item .t::after { content: " \2192"; color: var(--ink-faint); font-weight: 400; }
+  .writing-item:hover .t { border-bottom: 0; }
+  .writing-item:hover .t::after { color: var(--ink); }
+
   /* Status */
   .status-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 30px; }
   @media (max-width: 720px) { .status-grid { grid-template-columns: 1fr; } }
@@ -187,6 +206,7 @@
     <nav>
       <a href="https://github.com/obengbuo/aegis" target="_blank" rel="noopener">GitHub</a>
       <a href="https://github.com/obengbuo/aegis/blob/v0.2.0/docs/INTEGRATION.md" target="_blank" rel="noopener">Quick start</a>
+      <a href="#writing">Writing</a>
       <a href="#contact">Contact</a>
     </nav>
   </div>
@@ -333,6 +353,19 @@
   </div>
 </section>
 
+<section id="writing">
+  <div class="wrap">
+    <h2>Writing</h2>
+    <div class="writing-list">
+      <a class="writing-item" href="/writing/capability-scoping-bypass.html">
+        <div class="date">16 SEP 2026</div>
+        <div class="t">Your agent's permissions are tighter than your policy thinks</div>
+        <div class="d">Literal argument matching eliminates path traversal for single values. It says nothing about lists. Two capability-scoping bypasses, how batched tool calls silently remove argument scoping, and the fix.</div>
+      </a>
+    </div>
+  </div>
+</section>
+
 <section id="contact">
   <div class="wrap">
     <h2>Current status</h2>
@@ -363,7 +396,7 @@
       &nbsp;·&nbsp;
       <a href="https://www.linkedin.com/in/obeng-buo-72ab8296/" target="_blank" rel="noopener">LinkedIn</a>
       &nbsp;·&nbsp;
-      <a href="mailto:hello@aegisruntime.dev">obengbuo@aegisruntime.dev</a>
+      <a href="mailto:obengbuo@aegisruntime.dev">obengbuo@aegisruntime.dev</a>
     </div>
   </div>
 </footer>
