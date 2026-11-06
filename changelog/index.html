@@ -4,12 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Changelog & roadmap — Aegis</title>
-<meta name="description" content="Aegis release history from v0.1.0 to v0.2.0, unreleased fixes on main, and the public roadmap: server fingerprinting, audit hash chain, container image.">
+<meta name="description" content="Aegis release history from v0.1.0 to v0.2.1, and the public roadmap: server fingerprinting, audit hash chain, container image.">
 <link rel="canonical" href="https://aegisruntime.dev/changelog/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Aegis">
 <meta property="og:title" content="Changelog & roadmap">
-<meta property="og:description" content="Aegis release history from v0.1.0 to v0.2.0, unreleased fixes on main, and the public roadmap: server fingerprinting, audit hash chain, container image.">
+<meta property="og:description" content="Aegis release history from v0.1.0 to v0.2.1, and the public roadmap: server fingerprinting, audit hash chain, container image.">
 <meta property="og:url" content="https://aegisruntime.dev/changelog/">
 <meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#15191C">
@@ -55,8 +55,8 @@
   <div class="wrap">
     <div class="grid-2" style="grid-template-columns:1.3fr 1fr;gap:56px;align-items:start">
       <div class="timeline prose">
-        <div class="release unreleased">
-          <h3>Unreleased <span class="when">on main</span></h3>
+        <div class="release">
+          <h3>v0.2.1 <span class="when">6 Nov 2026</span></h3>
           <ul>
             <li><strong>Rule 7 now classifies argument value types</strong> and closes the collection bypass. Lists are matched one element at a time, empty lists are denied, unconstrained lists are denied, and types the engine can't reason about are refused. Adds the <code>allow_any</code> waiver. <a href="/writing/capability-scoping-bypass.html">Write-up</a>.</li>
             <li><strong><code>spec_hash</code> on every governed call</strong>, including allowed ones, not only refusals.</li>

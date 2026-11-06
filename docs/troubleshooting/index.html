@@ -78,7 +78,7 @@
 <p><code>pip install</code> worked, but you're running a different Python environment than the one you installed into.</p>
 <div class="panel"><div class="panel-bar"><span>shell</span><button class="copy-btn" type="button" data-copy="cb24">copy</button></div><div class="panel-body"><pre id="cb24">python -c "import sys; print(sys.executable)"
 <span class="c"># activate the right venv:  source .venv/bin/activate   (Windows: .venv\Scripts\Activate.ps1)</span>
-pip install --force-reinstall git+https://github.com/obengbuo/aegis.git@v0.2.0</pre></div></div>
+pip install --force-reinstall git+https://github.com/obengbuo/aegis.git@v0.2.1</pre></div></div>
 
 <h2 id="auth">Could not resolve authentication method from propose_spec()</h2>
 <p><code>propose_spec()</code> calls the Anthropic API and needs <code>ANTHROPIC_API_KEY</code>. Aegis calls <code>load_dotenv()</code> on import, so a <code>.env</code> file in your working directory also works.</p>
