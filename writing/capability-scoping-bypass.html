@@ -7,231 +7,57 @@
 <meta name="description" content="Literal argument matching eliminates path traversal for single values. It says nothing about lists. Two capability-scoping bypasses in an MCP enforcement layer, how batched tool calls silently remove argument scoping, and the fix.">
 <link rel="canonical" href="https://aegisruntime.dev/writing/capability-scoping-bypass.html">
 <meta property="og:type" content="article">
+<meta property="og:site_name" content="Aegis">
 <meta property="og:title" content="Your agent's permissions are tighter than your policy thinks">
-<meta property="og:description" content="Literal argument matching eliminates path traversal for single values. It says nothing about lists. Two capability-scoping bypasses in an MCP enforcement layer, and the fix.">
+<meta property="og:description" content="Literal argument matching eliminates path traversal for single values. It says nothing about lists. Two capability-scoping bypasses in an MCP enforcement layer, how batched tool calls silently remove argument scoping, and the fix.">
 <meta property="og:url" content="https://aegisruntime.dev/writing/capability-scoping-bypass.html">
 <meta name="twitter:card" content="summary">
-<link rel="icon" href="data:,">
+<meta name="theme-color" content="#15191C">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="alternate" type="application/rss+xml" title="Aegis — Writing" href="/feed.xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --paper: #EDEFEA;
-    --paper-raised: #F5F6F2;
-    --ink: #15191C;
-    --ink-soft: #454C50;
-    --ink-faint: #767F81;
-    --rule: #C7CCC4;
-    --allow: #2F6B4F;
-    --deny: #A83B2A;
-    --panel: #15191C;
-    --panel-text: #EDEFEA;
-    --panel-text-soft: #9CA6A2;
-    --max: 1080px;
-    --measure: 70ch;
-  }
-
-  * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-
-  body {
-    margin: 0;
-    background: var(--paper);
-    color: var(--ink);
-    font-family: 'Archivo', system-ui, sans-serif;
-    font-size: 17px;
-    line-height: 1.55;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  a { color: inherit; }
-  a:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
-
-  .wrap { max-width: var(--max); margin: 0 auto; padding: 0 28px; }
-
-  code, .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
-
-  /* Header — identical to index.html */
-  header { padding: 28px 0 24px; border-bottom: 1px solid var(--rule); }
-  header .wrap {
-    display: flex; align-items: center; justify-content: space-between;
-    flex-wrap: wrap; gap: 16px;
-  }
-  .wordmark {
-    font-family: 'IBM Plex Mono', monospace;
-    font-weight: 600; font-size: 17px; letter-spacing: -0.01em;
-    text-decoration: none;
-  }
-  .wordmark span { color: var(--ink-faint); font-weight: 400; }
-  nav { display: flex; gap: 28px; font-size: 15px; flex-wrap: wrap; }
-  nav a { text-decoration: none; color: var(--ink-soft); border-bottom: 1px solid transparent; padding-bottom: 2px; }
-  nav a:hover { color: var(--ink); border-bottom-color: var(--ink); }
-  nav a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--rule); }
-
-  /* Article shell */
-  .article-wrap { max-width: var(--max); margin: 0 auto; padding: 0 28px; }
-
-  .backlink {
-    display: inline-block; margin: 30px 0 0;
-    font-family: 'IBM Plex Mono', monospace; font-size: 13.5px;
-    color: var(--ink-faint); text-decoration: none;
-    border-bottom: 1px solid transparent; padding-bottom: 2px;
-  }
-  .backlink:hover { color: var(--ink); border-bottom-color: var(--ink); }
-
-  /* Article head — vertical padding only, so .article-wrap keeps the side gutter */
-  .article-head { padding-top: 26px; padding-bottom: 40px; border-bottom: 1px solid var(--rule); }
-  h1 {
-    font-size: clamp(28px, 4.2vw, 41px);
-    line-height: 1.16; font-weight: 700;
-    letter-spacing: -0.015em; margin: 0 0 20px;
-    max-width: 22ch;
-  }
-  .dek {
-    font-size: 18.5px; color: var(--ink-soft);
-    line-height: 1.5; margin: 0 0 26px; max-width: 54ch;
-  }
-  .byline {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 13px; color: var(--ink-faint);
-    display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
-  }
-  .byline .sep { color: var(--rule); }
-
-  /* Long-form body */
-  article { padding: 44px 0 20px; }
-  article p {
-    font-size: 17.5px; line-height: 1.72;
-    color: var(--ink-soft); margin: 0 0 1.35em;
-    max-width: var(--measure);
-  }
-  article p strong { color: var(--ink); font-weight: 600; }
-  article h2 {
-    font-size: 24px; font-weight: 700; letter-spacing: -0.012em;
-    color: var(--ink); line-height: 1.25;
-    margin: 2.6em 0 0.85em; max-width: 26ch;
-    padding-top: 0.6em; border-top: 1px solid var(--rule);
-  }
-  article h2:first-of-type { margin-top: 0; padding-top: 0; border-top: none; }
-  article > *:first-child { margin-top: 0; }
-
-  article ul {
-    margin: 0 0 1.35em; padding-left: 0; list-style: none;
-    max-width: var(--measure);
-  }
-  article ul li {
-    font-size: 17.5px; line-height: 1.72; color: var(--ink-soft);
-    padding-left: 26px; margin-bottom: 0.6em; position: relative;
-  }
-  article ul li::before {
-    content: "—"; position: absolute; left: 0;
-    color: var(--ink-faint); font-family: 'IBM Plex Mono', monospace;
-    font-size: 15px;
-  }
-  article ul li strong { color: var(--ink); font-weight: 600; }
-
-  /* Inline code */
-  article p code, article li code {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.88em; background: var(--paper-raised);
-    border: 1px solid var(--rule); border-radius: 3px;
-    padding: 1px 5px; color: var(--ink);
-  }
-
-  /* Dark code panel — same style as the homepage hero */
-  .panel {
-    background: var(--panel); color: var(--panel-text);
-    border-radius: 6px; padding: 22px 22px 24px;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 12.5px; line-height: 1.75; overflow-x: auto;
-    margin: 0 0 1.9em; max-width: var(--measure);
-    -webkit-overflow-scrolling: touch;
-  }
-  .panel pre {
-    margin: 0; font: inherit; color: inherit;
-    white-space: pre; tab-size: 2;
-  }
-  .panel .c { color: var(--panel-text-soft); }
-  .panel .allow { color: #63C795; font-weight: 600; }
-  .panel .deny { color: #E37E68; font-weight: 600; }
-  .panel .key { color: #9CC6E0; }
-  .panel .str { color: #C9D6A8; }
-
-  /* Pull quote */
-  .pull {
-    font-size: 17.5px; line-height: 1.6; color: var(--ink);
-    border-left: 3px solid var(--ink); padding-left: 20px;
-    margin: 0 0 1.9em; max-width: var(--measure);
-  }
-  .pull strong { font-weight: 700; }
-
-  /* Article footer */
-  .article-foot {
-    margin-top: 56px; padding-top: 30px;
-    border-top: 1px solid var(--rule); max-width: var(--measure);
-  }
-  .article-foot p { font-size: 16px; color: var(--ink-soft); }
-  .article-foot a {
-    color: var(--ink); font-weight: 600; text-decoration: none;
-    border-bottom: 1px solid var(--rule); padding-bottom: 1px;
-  }
-  .article-foot a:hover { border-bottom-color: var(--ink); }
-
-  footer { margin-top: 64px; padding: 44px 0 56px; border-top: 1px solid var(--rule); }
-  footer .wrap {
-    display: flex; justify-content: space-between; flex-wrap: wrap;
-    gap: 16px; font-size: 14px; color: var(--ink-faint);
-  }
-  footer a { text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 3px; }
-  footer a:hover { text-decoration-color: var(--ink); }
-
-  @media (max-width: 620px) {
-    body { font-size: 16px; }
-    .wrap, .article-wrap { padding: 0 20px; }
-    nav { gap: 18px; font-size: 14px; }
-    article p, article ul li { font-size: 17px; line-height: 1.68; }
-    article h2 { font-size: 21px; margin-top: 2.2em; max-width: none; }
-    h1 { max-width: none; }
-    .dek { font-size: 17px; }
-    .panel { font-size: 11.5px; padding: 18px 16px 20px; border-radius: 5px; }
-    footer .wrap { flex-direction: column; gap: 10px; }
-  }
-  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
-</style>
+<link rel="stylesheet" href="/assets/css/site.css">
+<script>try{var t=localStorage.getItem('aegis-theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BlogPosting", "headline": "Your agent's permissions are tighter than your policy thinks", "datePublished": "2026-09-16", "author": {"@type": "Person", "name": "Obeng Buo"}, "publisher": {"@type": "Organization", "name": "Aegis"}, "mainEntityOfPage": "https://aegisruntime.dev/writing/capability-scoping-bypass.html"}</script>
+<script src="/assets/js/site.js" defer></script>
 </head>
 <body>
-
-<header>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
   <div class="wrap">
-    <a class="wordmark" href="/">aegis<span>.runtime</span></a>
-    <nav>
-      <a href="https://github.com/obengbuo/aegis" target="_blank" rel="noopener">GitHub</a>
-      <a href="https://github.com/obengbuo/aegis/blob/v0.2.0/docs/INTEGRATION.md" target="_blank" rel="noopener">Quick start</a>
-      <a href="/#writing" aria-current="page">Writing</a>
-      <a href="/#contact">Contact</a>
+    <a class="wordmark" href="/" aria-label="aegis.runtime home"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2.5 4 5.6v6.1c0 4.9 3.4 8.6 8 9.8 4.6-1.2 8-4.9 8-9.8V5.6L12 2.5Z" stroke-linejoin="round"/><path d="m8.6 12.2 2.3 2.3 4.6-4.8" stroke-linecap="round" stroke-linejoin="round"/></svg>aegis<span>.runtime</span></a>
+    <nav class="site-nav" id="site-nav" aria-label="Primary">
+      <a href="/product/">Product</a>
+      <a href="/docs/">Docs</a>
+      <a href="/playground/">Playground</a>
+      <a href="/security/">Security</a>
+      <a href="/writing/" aria-current="page">Writing</a>
+      <a href="/about/">About</a>
     </nav>
+    <div class="header-actions">
+      <button class="icon-btn theme-toggle" type="button" aria-label="Toggle colour theme"><svg class="sun" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><svg class="moon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"/></svg></button>
+      <a class="btn btn-solid btn-sm" href="https://github.com/obengbuo/aegis" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>GitHub</a>
+      <button class="icon-btn menu-toggle" type="button" aria-controls="site-nav" aria-expanded="false" aria-label="Open menu"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    </div>
   </div>
 </header>
-
-<div class="article-wrap">
-  <a class="backlink" href="/">&larr; aegis.runtime</a>
-</div>
-
-<div class="article-wrap article-head">
-  <h1>Your agent's permissions are tighter than your policy thinks</h1>
-  <p class="dek">Literal argument matching eliminates path traversal for single values. It says nothing at all about lists — and that gap doesn't announce itself.</p>
-  <div class="byline">
-    <span>Obeng Buo</span>
-    <span class="sep">&middot;</span>
-    <time datetime="2026-09-16">16 September 2026</time>
-    <span class="sep">&middot;</span>
-    <span>Aegis</span>
-  </div>
-</div>
-
-<div class="article-wrap">
-<article>
+<main id="main">
+<div class="reading-progress" aria-hidden="true"></div>
+<div class="wrap">
+  <a class="backlink" href="/writing/">&larr; All writing</a>
+  <header class="article-head">
+    <p class="eyebrow">Security research</p>
+    <h1>Your agent's permissions are tighter than your policy thinks</h1>
+    <p class="dek">Literal argument matching eliminates path traversal for single values. It says nothing at all about lists — and that gap doesn't announce itself.</p>
+    <div class="byline">
+      <span>Obeng Buo</span><span class="sep">&middot;</span>
+      <time datetime="2026-09-16">16 September 2026</time><span class="sep">&middot;</span>
+      <span>7 min read</span>
+    </div>
+  </header>
+<article class="prose">
 
 <p>I've been building a capability-enforcement layer for AI agents that call tools over MCP. The model is simple: before an agent runs, generate a policy listing the exact tools it may call and the exact argument values it may call them with. Evaluate every call against that policy. Deny anything not listed.</p>
 
@@ -243,7 +69,7 @@
 
 <p>A user asks an agent to read three files and summarise them. The policy generated for that task looks like this:</p>
 
-<div class="panel"><pre><span class="key">servers</span>:
+<div class="panel"><div class="panel-body"><pre><span class="key">servers</span>:
   <span class="key">filesystem</span>:
     <span class="key">tools</span>:
       <span class="key">read_text_file</span>:
@@ -252,7 +78,7 @@
             <span class="key">must_match_one_of</span>:
               - <span class="str">/sandbox/meeting-notes.txt</span>
               - <span class="str">/sandbox/agenda.txt</span>
-              - <span class="str">/sandbox/action-items.txt</span></pre></div>
+              - <span class="str">/sandbox/action-items.txt</span></pre></div></div>
 
 <p>Three exact paths. Nothing else permitted. A call for any fourth file is refused.</p>
 
@@ -266,9 +92,9 @@
 
 <p>The reference filesystem MCP server exposes <code>read_multiple_files</code>, which takes a list. Asked to read three files, the model batched them:</p>
 
-<div class="panel"><pre>read_multiple_files(paths=[<span class="str">"/sandbox/meeting-notes.txt"</span>,
+<div class="panel"><div class="panel-body"><pre>read_multiple_files(paths=[<span class="str">"/sandbox/meeting-notes.txt"</span>,
                            <span class="str">"/sandbox/agenda.txt"</span>,
-                           <span class="str">"/sandbox/action-items.txt"</span>])</pre></div>
+                           <span class="str">"/sandbox/action-items.txt"</span>])</pre></div></div>
 
 <p>The policy has no entry for <code>read_multiple_files</code>, so the call was refused. Correctly — deny by default worked. But for the wrong reason, and the refusal landed on exactly the calls the user had asked for.</p>
 
@@ -278,15 +104,15 @@
 
 <p>The path of least resistance is to leave it unconstrained:</p>
 
-<div class="panel"><pre>      <span class="key">read_multiple_files</span>:
+<div class="panel"><div class="panel-body"><pre>      <span class="key">read_multiple_files</span>:
         <span class="key">args</span>:
-          <span class="key">paths</span>:          <span class="c"># no constraint — a list can't be matched literally</span></pre></div>
+          <span class="key">paths</span>:          <span class="c"># no constraint — a list can't be matched literally</span></pre></div></div>
 
 <p>Which produces this:</p>
 
-<div class="panel"><pre><span class="c">policy:</span> read_multiple_files, paths unconstrained
+<div class="panel"><div class="panel-body"><pre><span class="c">policy:</span> read_multiple_files, paths unconstrained
 <span class="c">call:  </span> read_multiple_files(paths=[<span class="str">"/etc/shadow"</span>])
-<span class="c">result:</span> <span class="allow">ALLOW</span></pre></div>
+<span class="c">result:</span> <span class="allow">ALLOW</span></pre></div></div>
 
 <p>Path scoping for that tool is now entirely gone.</p>
 
@@ -315,9 +141,9 @@
 
 <p>It also means this:</p>
 
-<div class="panel"><pre><span class="c">policy:</span> paths must_match_one_of [<span class="str">"['/sandbox/a.txt', '/sandbox/b.txt']"</span>]
+<div class="panel"><div class="panel-body"><pre><span class="c">policy:</span> paths must_match_one_of [<span class="str">"['/sandbox/a.txt', '/sandbox/b.txt']"</span>]
 <span class="c">call:  </span> paths = <span class="str">"['/sandbox/a.txt', '/sandbox/b.txt']"</span>    <span class="c">&larr; a string</span>
-<span class="c">result:</span> <span class="allow">ALLOW</span></pre></div>
+<span class="c">result:</span> <span class="allow">ALLOW</span></pre></div></div>
 
 <p>The constraint was written with a list in mind. It is satisfied by a string that happens to render identically. <code>str(value)</code> on both sides makes a list and its string representation indistinguishable.</p>
 
@@ -335,10 +161,10 @@
 
 <p>There is an explicit escape hatch, because sometimes an operator genuinely needs an unconstrained argument and forcing them to fake a constraint is worse than letting them say so:</p>
 
-<div class="panel"><pre>      <span class="key">read_multiple_files</span>:
+<div class="panel"><div class="panel-body"><pre>      <span class="key">read_multiple_files</span>:
         <span class="key">args</span>:
           <span class="key">paths</span>:
-            <span class="key">allow_any</span>: <span class="str">true</span></pre></div>
+            <span class="key">allow_any</span>: <span class="str">true</span></pre></div></div>
 
 <p>That is not a free pass. It is off by default, it has to be written deliberately, and the resulting decision carries a distinct rule identifier in the audit record. A waiver shows up in a query for waivers. It does not hide inside the ordinary allows.</p>
 
@@ -375,23 +201,66 @@
   <p>If you're running agents with real tool access and want to compare notes on how you're bounding them, I'd genuinely like to hear it — particularly if you've hit either of these and solved it differently. <a href="mailto:obengbuo@aegisruntime.dev">obengbuo@aegisruntime.dev</a></p>
 </div>
 
+  <div class="share-row">
+    <button class="btn btn-line btn-sm" type="button" data-share-copy="https://aegisruntime.dev/writing/capability-scoping-bypass.html">Copy link</button>
+    <a class="btn btn-line btn-sm" href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Faegisruntime.dev%2Fwriting%2Fcapability-scoping-bypass.html" target="_blank" rel="noopener">Share on LinkedIn</a>
+    <a class="btn btn-line btn-sm" href="/playground/">Reproduce it in the playground</a>
+  </div>
 </article>
 </div>
 
-<footer>
+</main>
+<footer class="site-footer">
   <div class="wrap">
-    <div>Aegis — MIT licensed.</div>
-    <div>
-      <a href="https://github.com/obengbuo/aegis" target="_blank" rel="noopener">Library</a>
-      &nbsp;·&nbsp;
-      <a href="https://github.com/obengbuo/aegis-controlplane" target="_blank" rel="noopener">Control plane</a>
-      &nbsp;·&nbsp;
-      <a href="https://www.linkedin.com/in/obeng-buo-72ab8296/" target="_blank" rel="noopener">LinkedIn</a>
-      &nbsp;·&nbsp;
-      <a href="mailto:obengbuo@aegisruntime.dev">obengbuo@aegisruntime.dev</a>
+    <div class="footer-grid">
+      <div>
+        <a class="wordmark" href="/"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2.5 4 5.6v6.1c0 4.9 3.4 8.6 8 9.8 4.6-1.2 8-4.9 8-9.8V5.6L12 2.5Z" stroke-linejoin="round"/><path d="m8.6 12.2 2.3 2.3 4.6-4.8" stroke-linecap="round" stroke-linejoin="round"/></svg>aegis<span>.runtime</span></a>
+        <p class="footer-blurb">Deterministic capability enforcement for AI agents on MCP. No LLM in the enforcement path. Open source, MIT licensed.</p>
+      </div>
+      <div>
+        <h4>Product</h4>
+        <ul>
+          <li><a href="/product/">Overview</a></li>
+          <li><a href="/product/#how-it-works">How it works</a></li>
+          <li><a href="/product/#control-plane">Control plane</a></li>
+          <li><a href="/playground/">Policy playground</a></li>
+          <li><a href="/changelog/">Changelog</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Docs</h4>
+        <ul>
+          <li><a href="/docs/">Quick start</a></li>
+          <li><a href="/docs/concepts/">Core concepts</a></li>
+          <li><a href="/docs/capability-spec/">Capability spec</a></li>
+          <li><a href="/docs/operations/">Audit &amp; OTLP</a></li>
+          <li><a href="/docs/troubleshooting/">Troubleshooting</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Security</h4>
+        <ul>
+          <li><a href="/security/">OWASP MCP Top 10</a></li>
+          <li><a href="/security/#threat-model">Threat model</a></li>
+          <li><a href="/security/#disclosure">Report a vulnerability</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Project</h4>
+        <ul>
+          <li><a href="/about/">About</a></li>
+          <li><a href="/writing/">Writing</a></li>
+          <li><a href="/about/#contact">Contact</a></li>
+          <li><a href="/feed.xml">RSS feed</a></li>
+          <li><a href="https://github.com/obengbuo/aegis" target="_blank" rel="noopener">GitHub</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div>&copy; <span data-year>2026</span> Aegis. MIT licensed.</div>
+      <div><a href="mailto:obengbuo@aegisruntime.dev">obengbuo@aegisruntime.dev</a> &nbsp;&middot;&nbsp; <a href="https://www.linkedin.com/in/obeng-buo-72ab8296/" target="_blank" rel="noopener">LinkedIn</a></div>
     </div>
   </div>
 </footer>
-
 </body>
 </html>

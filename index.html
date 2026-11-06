@@ -5,401 +5,297 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Aegis — Runtime capability enforcement for AI agents</title>
 <meta name="description" content="Aegis is a deterministic capability-enforcement layer for AI agents on MCP. No LLM in the enforcement path. Every tool call evaluated against a spec, with a forensic audit trail.">
-<link rel="icon" href="data:,">
+<link rel="canonical" href="https://aegisruntime.dev/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Aegis">
+<meta property="og:title" content="Aegis — Runtime capability enforcement for AI agents">
+<meta property="og:description" content="Aegis is a deterministic capability-enforcement layer for AI agents on MCP. No LLM in the enforcement path. Every tool call evaluated against a spec, with a forensic audit trail.">
+<meta property="og:url" content="https://aegisruntime.dev/">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#15191C">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="alternate" type="application/rss+xml" title="Aegis — Writing" href="/feed.xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --paper: #EDEFEA;
-    --paper-raised: #F5F6F2;
-    --ink: #15191C;
-    --ink-soft: #454C50;
-    --ink-faint: #767F81;
-    --rule: #C7CCC4;
-    --allow: #2F6B4F;
-    --deny: #A83B2A;
-    --panel: #15191C;
-    --panel-text: #EDEFEA;
-    --panel-text-soft: #9CA6A2;
-    --max: 1080px;
-  }
-
-  * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-
-  body {
-    margin: 0;
-    background: var(--paper);
-    color: var(--ink);
-    font-family: 'Archivo', system-ui, sans-serif;
-    font-size: 17px;
-    line-height: 1.55;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  a { color: inherit; }
-  a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
-
-  .wrap { max-width: var(--max); margin: 0 auto; padding: 0 28px; }
-
-  code, .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
-
-  /* Header */
-  header { padding: 28px 0 24px; border-bottom: 1px solid var(--rule); }
-  header .wrap {
-    display: flex; align-items: center; justify-content: space-between;
-    flex-wrap: wrap; gap: 16px;
-  }
-  .wordmark {
-    font-family: 'IBM Plex Mono', monospace;
-    font-weight: 600; font-size: 17px; letter-spacing: -0.01em;
-  }
-  .wordmark span { color: var(--ink-faint); font-weight: 400; }
-  nav { display: flex; gap: 28px; font-size: 15px; }
-  nav a { text-decoration: none; color: var(--ink-soft); border-bottom: 1px solid transparent; padding-bottom: 2px; }
-  nav a:hover { color: var(--ink); border-bottom-color: var(--ink); }
-
-  /* Hero */
-  .hero { padding: 72px 0 80px; }
-  .hero .grid {
-    display: grid; grid-template-columns: 1.05fr 1fr;
-    gap: 56px; align-items: start;
-  }
-  h1 {
-    font-size: clamp(30px, 4.4vw, 44px);
-    line-height: 1.15; font-weight: 700;
-    letter-spacing: -0.015em; margin: 0 0 22px;
-  }
-  .lede { font-size: 18px; color: var(--ink-soft); max-width: 46ch; margin: 0 0 30px; }
-  .cta-row { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 26px; }
-  .btn {
-    display: inline-block; padding: 12px 20px; font-size: 15px;
-    font-weight: 600; text-decoration: none;
-    border: 1px solid var(--ink); border-radius: 3px;
-  }
-  .btn-solid { background: var(--ink); color: var(--paper); }
-  .btn-solid:hover { background: #262D31; }
-  .btn-line { background: transparent; color: var(--ink); }
-  .btn-line:hover { background: var(--paper-raised); }
-  .status-line { font-size: 13.5px; color: var(--ink-faint); font-family: 'IBM Plex Mono', monospace; }
-  .status-line .dot {
-    display: inline-block; width: 7px; height: 7px; border-radius: 50%;
-    background: var(--allow); margin-right: 8px; vertical-align: middle;
-  }
-
-  /* Terminal panel */
-  .panel {
-    background: var(--panel); color: var(--panel-text);
-    border-radius: 6px; padding: 22px 22px 24px;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 12.5px; line-height: 1.75; overflow-x: auto;
-  }
-  .panel .cmd { color: var(--panel-text-soft); margin-bottom: 14px; font-size: 12px; }
-  .panel .rule-line { color: var(--panel-text-soft); }
-  .panel .allow { color: #63C795; font-weight: 600; }
-  .panel .deny { color: #E37E68; font-weight: 600; }
-  .panel .meta { color: var(--panel-text-soft); padding-left: 22px; display: block; }
-  .panel hr { border: none; border-top: 1px solid #2B3236; margin: 12px 0; }
-  .panel .result { color: var(--panel-text-soft); }
-
-  /* Sections */
-  section { padding: 64px 0; border-top: 1px solid var(--rule); }
-  h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 34px; }
-
-  /* Pipeline */
-  .pipeline { display: flex; align-items: stretch; flex-wrap: wrap; gap: 0; margin-bottom: 30px; }
-  .pipeline .step { flex: 1 1 160px; padding: 16px 18px; border: 1px solid var(--rule); }
-  .pipeline .step + .step { border-left: none; }
-  @media (max-width: 720px) {
-    .pipeline .step { border-left: 1px solid var(--rule); }
-    .pipeline .step + .step { border-top: none; }
-  }
-  .pipeline .step .n { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--ink-faint); margin-bottom: 8px; }
-  .pipeline .step .t { font-weight: 600; font-size: 15px; margin-bottom: 6px; }
-  .pipeline .step .d { font-size: 13.5px; color: var(--ink-soft); line-height: 1.45; }
-  .commitment {
-    font-size: 17px; max-width: 68ch;
-    border-left: 3px solid var(--ink); padding-left: 20px; margin: 0;
-  }
-  .commitment strong { font-weight: 700; }
-
-  /* Capability list */
-  .cap-list { border-top: 1px solid var(--rule); }
-  .cap-row {
-    display: grid; grid-template-columns: 240px 1fr; gap: 24px;
-    padding: 18px 0; border-bottom: 1px solid var(--rule);
-  }
-  .cap-row .name { font-weight: 600; font-size: 15px; }
-  .cap-row .desc { font-size: 15px; color: var(--ink-soft); }
-  @media (max-width: 620px) { .cap-row { grid-template-columns: 1fr; gap: 6px; } }
-
-  .stack-diagram {
-    font-family: 'IBM Plex Mono', monospace; font-size: 13.5px;
-    color: var(--ink-soft); background: var(--paper-raised);
-    border: 1px solid var(--rule); border-radius: 4px;
-    padding: 20px 24px; margin: 26px 0; line-height: 1.9;
-  }
-  .stack-diagram .who { color: var(--ink); font-weight: 600; }
-
-  p.body-copy { font-size: 16px; color: var(--ink-soft); max-width: 62ch; }
-
-  /* Two-part layout */
-  .parts { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 8px; }
-  @media (max-width: 720px) { .parts { grid-template-columns: 1fr; } }
-  .part { border: 1px solid var(--rule); border-radius: 4px; padding: 22px 24px; background: var(--paper-raised); }
-  .part .k { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--ink-faint); margin-bottom: 10px; }
-  .part h3 { font-size: 17px; font-weight: 700; margin: 0 0 10px; }
-  .part p { font-size: 15px; color: var(--ink-soft); margin: 0 0 10px; }
-  .part .opt { font-size: 13.5px; color: var(--ink-faint); font-style: normal; }
-  .part-links { margin-top: 14px; font-size: 14px; display: flex; gap: 18px; flex-wrap: wrap; }
-  .part-links a {
-    text-decoration: none; color: var(--ink); font-weight: 600;
-    border-bottom: 1px solid var(--rule); padding-bottom: 1px;
-  }
-  .part-links a:hover { border-bottom-color: var(--ink); }
-  .part-links a::after { content: " \2192"; color: var(--ink-faint); font-weight: 400; }
-
-  /* Writing */
-  .writing-list { border-top: 1px solid var(--rule); }
-  .writing-item {
-    display: block; text-decoration: none;
-    padding: 22px 0; border-bottom: 1px solid var(--rule);
-  }
-  .writing-item .date {
-    font-family: 'IBM Plex Mono', monospace; font-size: 12px;
-    color: var(--ink-faint); margin-bottom: 8px;
-  }
-  .writing-item .t {
-    font-size: 18px; font-weight: 700; letter-spacing: -0.01em;
-    color: var(--ink); margin-bottom: 8px; max-width: 34ch;
-  }
-  .writing-item .d { font-size: 15px; color: var(--ink-soft); max-width: 58ch; line-height: 1.5; }
-  .writing-item .t::after { content: " \2192"; color: var(--ink-faint); font-weight: 400; }
-  .writing-item:hover .t { border-bottom: 0; }
-  .writing-item:hover .t::after { color: var(--ink); }
-
-  /* Status */
-  .status-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 30px; }
-  @media (max-width: 720px) { .status-grid { grid-template-columns: 1fr; } }
-  .status-card { border: 1px solid var(--rule); padding: 20px; border-radius: 4px; }
-  .status-card .k { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--ink-faint); margin-bottom: 8px; }
-  .status-card .v { font-size: 15px; line-height: 1.5; }
-
-  footer { padding: 44px 0 56px; border-top: 1px solid var(--rule); }
-  footer .wrap {
-    display: flex; justify-content: space-between; flex-wrap: wrap;
-    gap: 16px; font-size: 14px; color: var(--ink-faint);
-  }
-  footer a { text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 3px; }
-  footer a:hover { text-decoration-color: var(--ink); }
-
-  @media (max-width: 860px) { .hero .grid { grid-template-columns: 1fr; } }
-  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
-</style>
+<link rel="stylesheet" href="/assets/css/site.css">
+<script>try{var t=localStorage.getItem('aegis-theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "Aegis", "applicationCategory": "SecurityApplication", "operatingSystem": "Cross-platform (Python 3.10+)", "softwareVersion": "0.2.0", "license": "https://opensource.org/licenses/MIT", "url": "https://aegisruntime.dev/", "codeRepository": "https://github.com/obengbuo/aegis", "description": "Deterministic capability enforcement for AI agents on the Model Context Protocol.", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}}</script>
+<script src="/assets/js/site.js" defer></script>
 </head>
 <body>
-
-<header>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
   <div class="wrap">
-    <div class="wordmark">aegis<span>.runtime</span></div>
-    <nav>
-      <a href="https://github.com/obengbuo/aegis" target="_blank" rel="noopener">GitHub</a>
-      <a href="https://github.com/obengbuo/aegis/blob/v0.2.0/docs/INTEGRATION.md" target="_blank" rel="noopener">Quick start</a>
-      <a href="#writing">Writing</a>
-      <a href="#contact">Contact</a>
+    <a class="wordmark" href="/" aria-label="aegis.runtime home"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2.5 4 5.6v6.1c0 4.9 3.4 8.6 8 9.8 4.6-1.2 8-4.9 8-9.8V5.6L12 2.5Z" stroke-linejoin="round"/><path d="m8.6 12.2 2.3 2.3 4.6-4.8" stroke-linecap="round" stroke-linejoin="round"/></svg>aegis<span>.runtime</span></a>
+    <nav class="site-nav" id="site-nav" aria-label="Primary">
+      <a href="/product/">Product</a>
+      <a href="/docs/">Docs</a>
+      <a href="/playground/">Playground</a>
+      <a href="/security/">Security</a>
+      <a href="/writing/">Writing</a>
+      <a href="/about/">About</a>
     </nav>
+    <div class="header-actions">
+      <button class="icon-btn theme-toggle" type="button" aria-label="Toggle colour theme"><svg class="sun" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><svg class="moon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"/></svg></button>
+      <a class="btn btn-solid btn-sm" href="https://github.com/obengbuo/aegis" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>GitHub</a>
+      <button class="icon-btn menu-toggle" type="button" aria-controls="site-nav" aria-expanded="false" aria-label="Open menu"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    </div>
   </div>
 </header>
-
-<div class="hero">
+<main id="main">
+<section class="hero">
   <div class="wrap grid">
     <div>
+      <p class="eyebrow">Runtime security for MCP agents</p>
       <h1>Identity proves who an agent is. Aegis decides what it's allowed to do.</h1>
-      <p class="lede">A deterministic capability-enforcement layer for AI agents on the Model Context Protocol. Every tool call is evaluated against a spec before it reaches the server, with no LLM anywhere in the enforcement path.</p>
+      <p class="lede">A deterministic capability-enforcement layer for AI agents on the Model Context Protocol. Every tool call is checked against a spec before it reaches the server. There is no LLM anywhere in the enforcement path.</p>
       <div class="cta-row">
-        <a class="btn btn-solid" href="https://github.com/obengbuo/aegis" target="_blank" rel="noopener">View on GitHub</a>
-        <a class="btn btn-line" href="https://github.com/obengbuo/aegis/blob/v0.2.0/docs/INTEGRATION.md" target="_blank" rel="noopener">Quick start guide</a>
+        <a class="btn btn-solid" href="/docs/">Get started</a>
+        <a class="btn btn-line" href="/playground/">Try the playground</a>
       </div>
-      <div class="status-line"><span class="dot"></span>v0.2.0 — pip-installable, 218 tests, public</div>
+      <div class="status-line"><span class="dot"></span>v0.2.0 · MIT · pip-installable · Python 3.10+</div>
     </div>
 
     <div class="panel">
-      <div class="cmd">$ python -m tools.demo_end_to_end</div>
-      <div>TOOL-CALL SEQUENCE — one agent run</div>
-      <hr>
-      <div><span class="rule-line">1</span> SPEC_LOADED&nbsp;&nbsp;<span class="rule-line">opens run</span></div>
-      <div><span class="rule-line">2</span> <span class="allow">OK</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;read_text_file&nbsp;&nbsp;action-items.txt</div>
-      <div><span class="rule-line">3</span> <span class="allow">OK</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;read_text_file&nbsp;&nbsp;agenda.txt</div>
-      <div><span class="rule-line">4</span> <span class="allow">OK</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;read_text_file&nbsp;&nbsp;meeting-notes.txt</div>
-      <div><span class="rule-line">5</span> <span class="deny">DENIED</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;read_text_file&nbsp;&nbsp;project-update.txt</div>
-      <span class="meta rule-line">rule-7-value-not-allowed</span>
-      <hr>
-      <div class="result">The injected instruction asked for a fourth file.<br>The MCP server never saw the request.</div>
+      <div class="panel-bar"><span>$ python -m tools.demo_end_to_end</span><button class="copy-btn" type="button" data-replay>replay</button></div>
+      <div class="panel-body runlog">
+        <div class="ln">TOOL-CALL SEQUENCE — one agent run</div>
+        <hr>
+        <div class="ln"><span class="rule-line">1</span> SPEC_LOADED&nbsp;&nbsp;<span class="rule-line">opens run</span></div>
+        <div class="ln"><span class="rule-line">2</span> <span class="allow">OK</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;read_text_file&nbsp;&nbsp;action-items.txt</div>
+        <div class="ln"><span class="rule-line">3</span> <span class="allow">OK</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;read_text_file&nbsp;&nbsp;agenda.txt</div>
+        <div class="ln"><span class="rule-line">4</span> <span class="allow">OK</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;read_text_file&nbsp;&nbsp;meeting-notes.txt</div>
+        <div class="ln"><span class="rule-line">5</span> <span class="deny">DENIED</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;read_text_file&nbsp;&nbsp;project-update.txt<span class="meta">rule-7-value-not-allowed</span></div>
+        <hr>
+        <div class="ln result">The injected instruction asked for a fourth file.<br>The MCP server never saw the request.</div>
+      </div>
     </div>
   </div>
-</div>
+</section>
 
-<section>
+<section class="section-tight" style="padding-top:0">
   <div class="wrap">
-    <h2>How a tool call gets evaluated</h2>
+    <div class="stats">
+      <div class="stat"><div class="v">0</div><div class="l">LLM calls in the enforcement path</div></div>
+      <div class="stat"><div class="v">9</div><div class="l">ordered rules, deny by default</div></div>
+      <div class="stat"><div class="v">218</div><div class="l">tests in the library</div></div>
+      <div class="stat"><div class="v">1 line</div><div class="l">to wrap a Pydantic AI toolset</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="grid-2" style="align-items:start;gap:56px">
+      <div>
+        <p class="eyebrow">The problem</p>
+        <h2>Prompt injection is a when, not an if.</h2>
+        <p class="body-copy">Any agent that reads files, web pages, tickets or email will eventually read text written by someone else. If that text tells the model to do something, sometimes the model will do it.</p>
+        <p class="body-copy">Asking a second model whether a call "looks right" has the same weakness as the first one. Aegis takes a different route. It doesn't try to spot the injection. It makes sure that when an injection works, it can't cause anything outside the task.</p>
+      </div>
+      <div>
+        <div class="cap-list">
+          <div class="cap-row" style="grid-template-columns:150px 1fr"><div class="name">Filters &amp; classifiers</div><div class="desc">Guess whether text is malicious. A new phrasing gets past them.</div></div>
+          <div class="cap-row" style="grid-template-columns:150px 1fr"><div class="name">LLM-as-judge</div><div class="desc">A model reviewing tool calls reads the same untrusted text the agent did.</div></div>
+          <div class="cap-row" style="grid-template-columns:150px 1fr"><div class="name">OAuth scopes</div><div class="desc">Say <em>which tools</em> an agent may call. They don't limit the paths, targets or URLs passed to those tools.</div></div>
+          <div class="cap-row" style="grid-template-columns:150px 1fr"><div class="name">Aegis</div><div class="desc">Fixes the exact <code>(server, tool, argument, value)</code> set before the run starts, then enforces it with plain code.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="how">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">How it works</p>
+        <h2>How a tool call gets evaluated</h2>
+      </div>
+      <a class="arrow-link" href="/product/#how-it-works">The full model</a>
+    </div>
     <div class="pipeline">
-      <div class="step">
-        <div class="n">1</div>
-        <div class="t">Request</div>
-        <div class="d">A user or operator describes the task in plain language.</div>
-      </div>
-      <div class="step">
-        <div class="n">2</div>
-        <div class="t">Proposer</div>
-        <div class="d">An LLM reads the request once, upfront, and drafts a minimum-capability spec. It never sees tool output.</div>
-      </div>
-      <div class="step">
-        <div class="n">3</div>
-        <div class="t">Spec</div>
-        <div class="d">The spec is validated and frozen. From here, nothing widens it.</div>
-      </div>
-      <div class="step">
-        <div class="n">4</div>
-        <div class="t">Enforcement</div>
-        <div class="d">Every tool call is checked against the spec by pure, deterministic code.</div>
-      </div>
-      <div class="step">
-        <div class="n">5</div>
-        <div class="t">Tool</div>
-        <div class="d">Allowed calls reach the MCP server. Denied calls never do.</div>
-      </div>
+      <div class="step trust"><div class="n"><span>01</span><span class="tag">trusted</span></div><div class="t">Request</div><div class="d">A user or operator describes the task in plain language.</div></div>
+      <div class="step trust"><div class="n"><span>02</span><span class="tag llm">LLM · once</span></div><div class="t">Proposer</div><div class="d">Reads the request once, before the run, and drafts a minimum-capability spec. It never sees tool output.</div></div>
+      <div class="step"><div class="n"><span>03</span><span class="tag">frozen</span></div><div class="t">Spec</div><div class="d">Validated, hashed and frozen. Nothing can widen it after this point.</div></div>
+      <div class="step"><div class="n"><span>04</span><span class="tag det">deterministic</span></div><div class="t">Enforcement</div><div class="d">Plain, deterministic code checks every tool call against the spec.</div></div>
+      <div class="step"><div class="n"><span>05</span><span class="tag">MCP</span></div><div class="t">Tool</div><div class="d">Allowed calls reach the MCP server. Denied calls never do.</div></div>
     </div>
-    <p class="commitment"><strong>The enforcement path contains no LLM.</strong> The proposer runs once, on trusted input, before execution starts. After that, every decision is computed in microseconds and is provable by reading the code.</p>
+    <p class="commitment"><strong>The enforcement path contains no LLM.</strong> The proposer runs once, on trusted input, before the run starts. After that, every decision takes microseconds and can be verified by reading the code.</p>
   </div>
 </section>
 
-<section>
+<section class="section">
   <div class="wrap">
-    <h2>Two pieces</h2>
-    <div class="parts">
-      <div class="part">
-        <div class="k">REQUIRED</div>
-        <h3>The library</h3>
-        <p>A Python package that wraps any Pydantic AI toolset in one line. Evaluates every tool call against a capability spec, intercepts sensitive ones for human approval, scans responses for leaked secrets, and writes a local audit log.</p>
-        <p class="opt"><code>pip install</code> and nothing else. Works standalone.</p>
-        <div class="part-links">
-          <a href="https://github.com/obengbuo/aegis" target="_blank" rel="noopener">Repo</a>
-          <a href="https://github.com/obengbuo/aegis/blob/v0.2.0/docs/INTEGRATION.md" target="_blank" rel="noopener">Integration guide</a>
+    <div class="grid-2" style="gap:48px;align-items:center">
+      <div>
+        <p class="eyebrow">Integration</p>
+        <h2>Drops into the agent you already have.</h2>
+        <p class="body-copy">Pass any Pydantic AI <code>MCPToolset</code> to <code>wrap_toolset()</code>. The spec can come from a plain-language request through <code>propose_spec()</code>, or from YAML an operator wrote, through <code>load_spec()</code>. Nothing else in the agent changes.</p>
+        <div class="cta-row mt-24">
+          <a class="btn btn-solid" href="/docs/">Read the quick start</a>
+          <a class="btn btn-line" href="/docs/capability-spec/">Spec reference</a>
         </div>
       </div>
-      <div class="part">
-        <div class="k">OPTIONAL</div>
-        <h3>The control plane</h3>
-        <p>A self-hosted backend that aggregates audit records across agents and makes them queryable. Reconstruct any run, find every refused call, prove which policy version made each decision.</p>
-        <p class="opt">Self-hosted, <code>docker compose up</code>. Never in the enforcement path — if it's unreachable, tool calls are still evaluated and decisions are still correct.</p>
-        <div class="part-links">
-          <a href="https://github.com/obengbuo/aegis-controlplane" target="_blank" rel="noopener">Repo</a>
-          <a href="https://github.com/obengbuo/aegis/blob/v0.2.0/docs/CONTROL_PLANE.md" target="_blank" rel="noopener">Setup guide</a>
-        </div>
+      <div class="panel">
+        <div class="panel-bar"><span>agent.py</span><button class="copy-btn" type="button" data-copy="home-code">copy</button></div>
+        <div class="panel-body"><pre id="home-code"><span class="key">from</span> aegis <span class="key">import</span> wrap_toolset, AegisConfig, propose_spec
+
+config = AegisConfig(sandbox_root=sandbox)
+spec = propose_spec(
+    <span class="str">f"Read {sandbox / 'notes.txt'} and summarise it"</span>,
+    sandbox_root=sandbox, run_id=config.run_id,
+)
+
+<span class="c"># every call through fs is now evaluated first</span>
+wrap_toolset(fs, <span class="str">"filesystem"</span>, spec=spec, config=config)</pre></div>
       </div>
     </div>
   </div>
 </section>
 
-<section>
+<section class="section">
   <div class="wrap">
-    <h2>What it does today</h2>
-    <div class="cap-list">
-      <div class="cap-row">
-        <div class="name">Deterministic enforcement</div>
-        <div class="desc">Every MCP tool call is evaluated against a capability spec before it reaches the server. Literal matching only — no globs, no regex, no inferred scope.</div>
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Capabilities</p>
+        <h2>What it does today</h2>
       </div>
-      <div class="cap-row">
-        <div class="name">LLM-generated specs</div>
-        <div class="desc">A natural-language request becomes a minimum-capability YAML spec, generated once and validated before use.</div>
+      <a class="arrow-link" href="/product/">Product overview</a>
+    </div>
+    <div class="grid-3">
+      <div class="card"><div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="10" width="16" height="10" rx="1.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div><h3>Deterministic enforcement</h3><p>Every MCP tool call is checked against a capability spec before it reaches the server. Values must match exactly. No globs, no regex, no guessed scope.</p></div>
+      <div class="card"><div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 4h10l4 4v12H5z"/><path d="M9 12h6M9 16h4"/></svg></div><h3>Generated specs</h3><p>A plain-language request becomes a minimum-capability YAML spec. It is generated once and validated before use. You can also write specs by hand.</p></div>
+      <div class="card"><div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c1.2-3.5 3.8-5 7-5s5.8 1.5 7 5"/></svg></div><h3>Human approval</h3><p>Intercept rules defined by the operator pause sensitive calls until someone signs off, through a callback you control. An intercept can't rescue a call that was denied.</p></div>
+      <div class="card"><div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.5-4.5"/></svg></div><h3>Response inspection</h3><p>Rule-based scanning catches leaked secrets before a response reaches the model: private keys, AWS keys, Luhn-valid card numbers and SSNs.</p></div>
+      <div class="card"><div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h10"/></svg></div><h3>Forensic audit trail</h3><p>Each decision is logged with its <code>run_id</code>, the <code>spec_hash</code> of the policy that made it, and the rule that fired. You can search for waivers and denials by rule.</p></div>
+      <div class="card"><div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 17l5-5 4 4 7-8"/><path d="M15 8h5v5"/></svg></div><h3>OTLP export</h3><p>Audit events go to your existing observability stack as OTLP spans: Datadog, Jaeger, Splunk, or any OTLP-compatible tool. If the collector is down, tool calls are never blocked.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="grid-2" style="gap:56px;align-items:start">
+      <div>
+        <p class="eyebrow">Position in the stack</p>
+        <h2>Downstream of identity. Upstream of the server.</h2>
+        <p class="body-copy">Identity vendors answer one question: is this agent allowed in? Aegis answers the next one: once it's in, what is it allowed to do on this task? Aegis doesn't compete with your identity provider. It handles what comes after.</p>
+        <p class="body-copy">It works with any identity system and any observability stack, and it adds one line of code to an existing Pydantic AI agent.</p>
       </div>
-      <div class="cap-row">
-        <div class="name">Human approval on sensitive calls</div>
-        <div class="desc">Operator-defined intercept rules pause a call for sign-off before it proceeds, through a callback you control.</div>
-      </div>
-      <div class="cap-row">
-        <div class="name">Response inspection</div>
-        <div class="desc">Deterministic scanning for leaked secrets — SSNs, credit cards, private keys, cloud credentials — before a response reaches the agent.</div>
-      </div>
-      <div class="cap-row">
-        <div class="name">Forensic audit trail</div>
-        <div class="desc">Every decision is logged with the exact policy version and prompt version that produced it. Waivers and denials are greppable by rule.</div>
-      </div>
-      <div class="cap-row">
-        <div class="name">Central audit aggregation</div>
-        <div class="desc">The optional control plane collects records across agents into Postgres, with a query API and a read-only web view for reconstructing any run.</div>
-      </div>
-      <div class="cap-row">
-        <div class="name">OTLP export</div>
-        <div class="desc">Audit events flow into your existing observability stack — Datadog, Jaeger, or anything OTLP-compatible.</div>
+      <div class="stack">
+        <div class="layer"><div class="who">Identity provider</div><div class="what">Authenticates the agent: who it is</div></div>
+        <div class="layer me"><div class="who">Aegis</div><div class="what">Decides what the authenticated agent may do on this task, down to argument values</div></div>
+        <div class="layer"><div class="who">MCP server</div><div class="what">Only sees the calls Aegis let through</div></div>
+        <div class="layer"><div class="who">Observability</div><div class="what">Receives every decision as an OTLP span</div></div>
       </div>
     </div>
   </div>
 </section>
 
-<section>
+<section class="section">
   <div class="wrap">
-    <h2>Where it sits</h2>
-    <p class="body-copy">Identity vendors answer one question: is this agent allowed in. Aegis answers a different one: what is it allowed to do once it's in. These are separate layers, and Aegis doesn't compete with the first one. It picks up where that one leaves off.</p>
-    <div class="stack-diagram">
-      <div><span class="who">Your identity provider</span> — authenticates the agent</div>
-      <div style="padding-left: 20px;">↓</div>
-      <div><span class="who">Aegis</span> — decides what the authenticated agent may do, per task</div>
-      <div style="padding-left: 20px;">↓</div>
-      <div>MCP server — only sees the calls Aegis allowed through</div>
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Honest coverage</p>
+        <h2>Mapped against the OWASP MCP Top 10</h2>
+        <p class="section-intro">One control can't cover a ten-category taxonomy, and Aegis doesn't claim to. Here is what it covers, what it partly covers, and what you need something else for.</p>
+      </div>
+      <a class="arrow-link" href="/security/">See every category</a>
     </div>
-    <p class="body-copy">It works with any identity system, any observability stack, and drops into an existing Pydantic AI agent with one line of code.</p>
+    <div class="coverage-bar" aria-hidden="true" style="max-width:none;height:14px">
+      <span style="flex:3;background:var(--allow)"></span><span style="flex:5;background:var(--hold)"></span><span style="flex:2;background:var(--rule-strong)"></span>
+    </div>
+    <div class="coverage-legend"><span><i style="background:var(--allow)"></i>3 covered</span><span><i style="background:var(--hold)"></i>5 partial</span><span><i style="background:var(--rule-strong)"></i>2 not covered: supply chain, shadow servers</span></div>
   </div>
 </section>
 
-<section id="writing">
+<section class="section" id="writing">
   <div class="wrap">
-    <h2>Writing</h2>
+    <div class="section-head">
+      <div><p class="eyebrow">Writing</p><h2>Notes from building it</h2></div>
+      <a class="arrow-link" href="/writing/">All writing</a>
+    </div>
     <div class="writing-list">
       <a class="writing-item" href="/writing/capability-scoping-bypass.html">
         <div class="date">16 SEP 2026</div>
-        <div class="t">Your agent's permissions are tighter than your policy thinks</div>
-        <div class="d">Literal argument matching eliminates path traversal for single values. It says nothing about lists. Two capability-scoping bypasses, how batched tool calls silently remove argument scoping, and the fix.</div>
+        <div>
+          <div class="t">Your agent's permissions are tighter than your policy thinks</div>
+          <div class="d">Exact argument matching stops path traversal for single values, but it says nothing about lists. This post covers two capability-scoping bypasses, how batched tool calls quietly remove argument scoping, and the fix.</div>
+        </div>
       </a>
     </div>
   </div>
 </section>
 
-<section id="contact">
+<section class="section">
   <div class="wrap">
-    <h2>Current status</h2>
-    <div class="status-grid">
-      <div class="status-card">
-        <div class="k">STAGE</div>
-        <div class="v">Pre-production. v0.2.0 shipped, public, pip-installable. 218 tests in the library, 317 in the control plane.</div>
+    <div class="cta-band">
+      <div>
+        <h2>Building agents with real tool access?</h2>
+        <p>Aegis is pre-production and open source. If "prove what the agent did" is a requirement for you, I'd like to hear what your team is running into.</p>
       </div>
-      <div class="status-card">
-        <div class="k">BUILT FOR</div>
-        <div class="v">Platform and security engineers running agents with real tool-calling access — especially where "prove what the agent did" is a requirement rather than a nice-to-have.</div>
-      </div>
-      <div class="status-card">
-        <div class="k">TALK TO ME</div>
-        <div class="v">Building agents with real tool access? I'd like to hear what your team is running into. <a href="mailto:obengbuo@aegisruntime.dev">obengbuo@aegisruntime.dev</a></div>
+      <div class="cta-row">
+        <a class="btn btn-solid" href="/about/#contact">Get in touch</a>
+        <a class="btn btn-line" href="https://github.com/obengbuo/aegis" target="_blank" rel="noopener">Star on GitHub</a>
       </div>
     </div>
   </div>
 </section>
 
-<footer>
+</main>
+<footer class="site-footer">
   <div class="wrap">
-    <div>Aegis — MIT licensed.</div>
-    <div>
-      <a href="https://github.com/obengbuo/aegis" target="_blank" rel="noopener">Library</a>
-      &nbsp;·&nbsp;
-      <a href="https://github.com/obengbuo/aegis-controlplane" target="_blank" rel="noopener">Control plane</a>
-      &nbsp;·&nbsp;
-      <a href="https://www.linkedin.com/in/obeng-buo-72ab8296/" target="_blank" rel="noopener">LinkedIn</a>
-      &nbsp;·&nbsp;
-      <a href="mailto:obengbuo@aegisruntime.dev">obengbuo@aegisruntime.dev</a>
+    <div class="footer-grid">
+      <div>
+        <a class="wordmark" href="/"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2.5 4 5.6v6.1c0 4.9 3.4 8.6 8 9.8 4.6-1.2 8-4.9 8-9.8V5.6L12 2.5Z" stroke-linejoin="round"/><path d="m8.6 12.2 2.3 2.3 4.6-4.8" stroke-linecap="round" stroke-linejoin="round"/></svg>aegis<span>.runtime</span></a>
+        <p class="footer-blurb">Deterministic capability enforcement for AI agents on MCP. No LLM in the enforcement path. Open source, MIT licensed.</p>
+      </div>
+      <div>
+        <h4>Product</h4>
+        <ul>
+          <li><a href="/product/">Overview</a></li>
+          <li><a href="/product/#how-it-works">How it works</a></li>
+          <li><a href="/product/#control-plane">Control plane</a></li>
+          <li><a href="/playground/">Policy playground</a></li>
+          <li><a href="/changelog/">Changelog</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Docs</h4>
+        <ul>
+          <li><a href="/docs/">Quick start</a></li>
+          <li><a href="/docs/concepts/">Core concepts</a></li>
+          <li><a href="/docs/capability-spec/">Capability spec</a></li>
+          <li><a href="/docs/operations/">Audit &amp; OTLP</a></li>
+          <li><a href="/docs/troubleshooting/">Troubleshooting</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Security</h4>
+        <ul>
+          <li><a href="/security/">OWASP MCP Top 10</a></li>
+          <li><a href="/security/#threat-model">Threat model</a></li>
+          <li><a href="/security/#disclosure">Report a vulnerability</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Project</h4>
+        <ul>
+          <li><a href="/about/">About</a></li>
+          <li><a href="/writing/">Writing</a></li>
+          <li><a href="/about/#contact">Contact</a></li>
+          <li><a href="/feed.xml">RSS feed</a></li>
+          <li><a href="https://github.com/obengbuo/aegis" target="_blank" rel="noopener">GitHub</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div>&copy; <span data-year>2026</span> Aegis. MIT licensed.</div>
+      <div><a href="mailto:obengbuo@aegisruntime.dev">obengbuo@aegisruntime.dev</a> &nbsp;&middot;&nbsp; <a href="https://www.linkedin.com/in/obeng-buo-72ab8296/" target="_blank" rel="noopener">LinkedIn</a></div>
     </div>
   </div>
 </footer>
-
 </body>
 </html>

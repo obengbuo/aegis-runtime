@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Aegis — Writing</title>
+    <link>https://aegisruntime.dev/writing/</link>
+    <atom:link href="https://aegisruntime.dev/feed.xml" rel="self" type="application/rss+xml"/>
+    <description>Engineering notes and security research from building Aegis, deterministic capability enforcement for AI agents on MCP.</description>
+    <language>en</language>
+    <lastBuildDate>Wed, 16 Sep 2026 09:00:00 GMT</lastBuildDate>
+    <item>
+      <title>Your agent's permissions are tighter than your policy thinks</title>
+      <link>https://aegisruntime.dev/writing/capability-scoping-bypass.html</link>
+      <guid isPermaLink="true">https://aegisruntime.dev/writing/capability-scoping-bypass.html</guid>
+      <pubDate>Wed, 16 Sep 2026 09:00:00 GMT</pubDate>
+      <author>obengbuo@aegisruntime.dev (Obeng Buo)</author>
+      <description>Literal argument matching eliminates path traversal for single values. It says nothing about lists. Two capability-scoping bypasses in an MCP enforcement layer, how batched tool calls silently remove argument scoping, and the fix.</description>
+    </item>
+  </channel>
+</rss>
